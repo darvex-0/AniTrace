@@ -35,6 +35,8 @@ export const MediaDialog = ({ open, onOpenChange, item, onSave }: Props) => {
   const [status, setStatus] = useState<MediaStatus>("Watching");
   const [currentEp, setCurrentEp] = useState("0");
   const [totalEps, setTotalEps] = useState("");
+  const [currentSeason, setCurrentSeason] = useState("1");
+  const [totalSeasons, setTotalSeasons] = useState("");
   const [sourceName, setSourceName] = useState("");
   const [sourceLink, setSourceLink] = useState("");
   const [notes, setNotes] = useState("");
@@ -47,6 +49,8 @@ export const MediaDialog = ({ open, onOpenChange, item, onSave }: Props) => {
       setStatus((item?.status as MediaStatus) ?? "Watching");
       setCurrentEp(String(item?.current_ep ?? 0));
       setTotalEps(item?.total_eps ? String(item.total_eps) : "");
+      setCurrentSeason(String(item?.current_season ?? 1));
+      setTotalSeasons(item?.total_seasons ? String(item.total_seasons) : "");
       setSourceName(item?.source_name ?? "");
       setSourceLink(item?.source_link ?? "");
       setNotes(item?.notes ?? "");
@@ -61,6 +65,8 @@ export const MediaDialog = ({ open, onOpenChange, item, onSave }: Props) => {
       status,
       current_ep: Number(currentEp) || 0,
       total_eps: totalEps ? Number(totalEps) : null,
+      current_season: Number(currentSeason) || 1,
+      total_seasons: totalSeasons ? Number(totalSeasons) : null,
       source_name: sourceName || null,
       source_link: sourceLink || null,
       notes: notes || null,
