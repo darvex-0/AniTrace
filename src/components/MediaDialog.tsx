@@ -15,6 +15,8 @@ const schema = z.object({
   status: z.enum(["Watching", "On-Hold", "Completed", "Plan to Watch"]),
   current_ep: z.number().int().min(0).max(99999),
   total_eps: z.number().int().min(0).max(99999).nullable(),
+  current_season: z.number().int().min(1).max(999),
+  total_seasons: z.number().int().min(1).max(999).nullable(),
   source_name: z.string().trim().max(100).nullable(),
   source_link: z.string().trim().url("Must be a valid URL").max(2000).nullable().or(z.literal("").transform(() => null)),
   notes: z.string().trim().max(2000).nullable(),
@@ -33,6 +35,8 @@ export const MediaDialog = ({ open, onOpenChange, item, onSave }: Props) => {
   const [status, setStatus] = useState<MediaStatus>("Watching");
   const [currentEp, setCurrentEp] = useState("0");
   const [totalEps, setTotalEps] = useState("");
+  const [currentSeason, setCurrentSeason] = useState("1");
+  const [totalSeasons, setTotalSeasons] = useState("");
   const [sourceName, setSourceName] = useState("");
   const [sourceLink, setSourceLink] = useState("");
   const [notes, setNotes] = useState("");
@@ -45,6 +49,8 @@ export const MediaDialog = ({ open, onOpenChange, item, onSave }: Props) => {
       setStatus((item?.status as MediaStatus) ?? "Watching");
       setCurrentEp(String(item?.current_ep ?? 0));
       setTotalEps(item?.total_eps ? String(item.total_eps) : "");
+      setCurrentSeason(String(item?.current_season ?? 1));
+      setTotalSeasons(item?.total_seasons ? String(item.total_seasons) : "");
       setSourceName(item?.source_name ?? "");
       setSourceLink(item?.source_link ?? "");
       setNotes(item?.notes ?? "");
@@ -59,6 +65,8 @@ export const MediaDialog = ({ open, onOpenChange, item, onSave }: Props) => {
       status,
       current_ep: Number(currentEp) || 0,
       total_eps: totalEps ? Number(totalEps) : null,
+      current_season: Number(currentSeason) || 1,
+      total_seasons: totalSeasons ? Number(totalSeasons) : null,
       source_name: sourceName || null,
       source_link: sourceLink || null,
       notes: notes || null,
@@ -109,13 +117,26 @@ export const MediaDialog = ({ open, onOpenChange, item, onSave }: Props) => {
             </div>
           </div>
 
+          {type !== "Movie" && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="cs">Current season</Label>
+                <Input id="cs" type="number" min="1" value={currentSeason} onChange={(e) => setCurrentSeason(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ts">Total seasons</Label>
+                <Input id="ts" type="number" min="1" value={totalSeasons} onChange={(e) => setTotalSeasons(e.target.value)} placeholder="Optional" />
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="cur">Current episode</Label>
               <Input id="cur" type="number" min="0" value={currentEp} onChange={(e) => setCurrentEp(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="tot">Total episodes</Label>
+              <Label htmlFor="tot">Total episodes {type !== "Movie" ? "(this season)" : ""}</Label>
               <Input id="tot" type="number" min="0" value={totalEps} onChange={(e) => setTotalEps(e.target.value)} placeholder="Optional" />
             </div>
           </div>

@@ -73,7 +73,15 @@ export const MediaCard = ({ item, onIncrement, onEdit, onDelete }: Props) => {
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-baseline gap-1">
+          <div className="flex items-baseline gap-2">
+            {item.type !== "Movie" && (
+              <span className="text-sm font-medium text-muted-foreground">
+                S{item.current_season}
+                {item.total_seasons ? <span className="opacity-60">/{item.total_seasons}</span> : null}
+                <span className="mx-1.5 opacity-40">·</span>
+                <span className="text-xs uppercase tracking-wide">Ep</span>
+              </span>
+            )}
             <span className={`text-2xl font-bold tabular-nums transition-transform ${bumping ? "scale-125 text-primary" : ""}`}>
               {item.current_ep}
             </span>
