@@ -11,6 +11,8 @@ export interface MediaItem {
   type: MediaType;
   current_ep: number;
   total_eps: number | null;
+  current_season: number;
+  total_seasons: number | null;
   source_name: string | null;
   source_link: string | null;
   status: MediaStatus;

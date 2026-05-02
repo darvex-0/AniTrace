@@ -15,6 +15,8 @@ const schema = z.object({
   status: z.enum(["Watching", "On-Hold", "Completed", "Plan to Watch"]),
   current_ep: z.number().int().min(0).max(99999),
   total_eps: z.number().int().min(0).max(99999).nullable(),
+  current_season: z.number().int().min(1).max(999),
+  total_seasons: z.number().int().min(1).max(999).nullable(),
   source_name: z.string().trim().max(100).nullable(),
   source_link: z.string().trim().url("Must be a valid URL").max(2000).nullable().or(z.literal("").transform(() => null)),
   notes: z.string().trim().max(2000).nullable(),
