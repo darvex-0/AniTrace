@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           created_at: string
           current_ep: number
+          current_season: number
           id: string
           last_watched: string | null
           notes: string | null
@@ -26,6 +27,7 @@ export type Database = {
           status: string
           title: string
           total_eps: number | null
+          total_seasons: number | null
           type: string
           updated_at: string
           user_id: string
@@ -33,6 +35,7 @@ export type Database = {
         Insert: {
           created_at?: string
           current_ep?: number
+          current_season?: number
           id?: string
           last_watched?: string | null
           notes?: string | null
@@ -41,6 +44,7 @@ export type Database = {
           status?: string
           title: string
           total_eps?: number | null
+          total_seasons?: number | null
           type?: string
           updated_at?: string
           user_id: string
@@ -48,6 +52,7 @@ export type Database = {
         Update: {
           created_at?: string
           current_ep?: number
+          current_season?: number
           id?: string
           last_watched?: string | null
           notes?: string | null
@@ -56,6 +61,7 @@ export type Database = {
           status?: string
           title?: string
           total_eps?: number | null
+          total_seasons?: number | null
           type?: string
           updated_at?: string
           user_id?: string
