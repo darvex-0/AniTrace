@@ -117,13 +117,26 @@ export const MediaDialog = ({ open, onOpenChange, item, onSave }: Props) => {
             </div>
           </div>
 
+          {type !== "Movie" && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="cs">Current season</Label>
+                <Input id="cs" type="number" min="1" value={currentSeason} onChange={(e) => setCurrentSeason(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ts">Total seasons</Label>
+                <Input id="ts" type="number" min="1" value={totalSeasons} onChange={(e) => setTotalSeasons(e.target.value)} placeholder="Optional" />
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="cur">Current episode</Label>
               <Input id="cur" type="number" min="0" value={currentEp} onChange={(e) => setCurrentEp(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="tot">Total episodes</Label>
+              <Label htmlFor="tot">Total episodes {type !== "Movie" ? "(this season)" : ""}</Label>
               <Input id="tot" type="number" min="0" value={totalEps} onChange={(e) => setTotalEps(e.target.value)} placeholder="Optional" />
             </div>
           </div>
