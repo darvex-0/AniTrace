@@ -1,0 +1,21 @@
+export type MediaType = "Anime" | "Series" | "Movie";
+export type MediaStatus = "Watching" | "On-Hold" | "Completed" | "Plan to Watch";
+
+export const MEDIA_TYPES: MediaType[] = ["Anime", "Series", "Movie"];
+export const MEDIA_STATUSES: MediaStatus[] = ["Watching", "On-Hold", "Completed", "Plan to Watch"];
+
+export interface MediaItem {
+  id: string;
+  user_id: string;
+  title: string;
+  type: MediaType;
+  current_ep: number;
+  total_eps: number | null;
+  source_name: string | null;
+  source_link: string | null;
+  status: MediaStatus;
+  notes: string | null;
+  last_watched: string | null;
+  created_at: string;
+  updated_at: string;
+}
