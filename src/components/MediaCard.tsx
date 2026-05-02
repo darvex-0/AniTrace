@@ -98,13 +98,6 @@ export const MediaCard = ({ item, onIncrement, onEdit, onDelete }: Props) => {
             </Button>
           )}
         </div>
-          {item.status !== "Completed" && (
-            <Button size="sm" onClick={handleBump} className="gap-1 h-8">
-              <Plus className="h-3.5 w-3.5" />
-              Episode
-            </Button>
-          )}
-        </div>
 
         {item.total_eps ? <Progress value={progress} className="h-1.5" /> : null}
 
