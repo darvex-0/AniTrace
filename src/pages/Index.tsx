@@ -205,6 +205,7 @@ const Index = () => {
                 item={item}
                 onIncrement={handleIncrement}
                 onEdit={(i) => { setEditing(i); setDialogOpen(true); }}
+                onEditProgress={(i) => setProgressTarget(i)}
                 onDelete={(i) => setDeleteTarget(i)}
               />
             ))}
