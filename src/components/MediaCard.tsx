@@ -30,7 +30,7 @@ const statusColor = (s: string) => {
   }
 };
 
-export const MediaCard = ({ item, onIncrement, onEdit, onDelete }: Props) => {
+export const MediaCard = ({ item, onIncrement, onEdit, onEditProgress, onDelete }: Props) => {
   const [bumping, setBumping] = useState(false);
   const progress = item.total_eps && item.total_eps > 0
     ? Math.min(100, (item.current_ep / item.total_eps) * 100)
