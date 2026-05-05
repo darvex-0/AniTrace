@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { MediaCard } from "@/components/MediaCard";
 import { MediaDialog } from "@/components/MediaDialog";
+import { ProgressDialog } from "@/components/ProgressDialog";
 import { MEDIA_STATUSES, type MediaItem } from "@/lib/types";
 
 const Index = () => {
@@ -24,6 +25,7 @@ const Index = () => {
   const [statusFilter, setStatusFilter] = useState<string>("Watching");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<MediaItem | null>(null);
+  const [progressTarget, setProgressTarget] = useState<MediaItem | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<MediaItem | null>(null);
 
   useEffect(() => {
@@ -117,6 +119,27 @@ const Index = () => {
     }
   };
 
+  const handleSaveProgress = async (id: string, data: { current_season: number; current_ep: number }) => {
+    const target = items.find((i) => i.id === id);
+    const isComplete = !!(target?.total_eps && data.current_ep >= target.total_eps);
+    const last_watched = new Date().toISOString();
+    setItems((prev) => prev.map((i) =>
+      i.id === id
+        ? { ...i, ...data, last_watched, status: isComplete ? "Completed" : i.status }
+        : i
+    ));
+    const { error } = await supabase
+      .from("media")
+      .update({ ...data, last_watched, ...(isComplete ? { status: "Completed" } : {}) })
+      .eq("id", id);
+    if (error) {
+      toast.error("Failed to update progress");
+      loadItems();
+    } else {
+      toast.success("Progress updated");
+    }
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
     const { error } = await supabase.from("media").delete().eq("id", deleteTarget.id);
@@ -203,6 +226,7 @@ const Index = () => {
                 item={item}
                 onIncrement={handleIncrement}
                 onEdit={(i) => { setEditing(i); setDialogOpen(true); }}
+                onEditProgress={(i) => setProgressTarget(i)}
                 onDelete={(i) => setDeleteTarget(i)}
               />
             ))}
@@ -215,6 +239,13 @@ const Index = () => {
         onOpenChange={(o) => { setDialogOpen(o); if (!o) setEditing(null); }}
         item={editing}
         onSave={handleSave}
+      />
+
+      <ProgressDialog
+        open={!!progressTarget}
+        onOpenChange={(o) => !o && setProgressTarget(null)}
+        item={progressTarget}
+        onSave={handleSaveProgress}
       />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>

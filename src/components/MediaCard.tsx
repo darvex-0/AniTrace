@@ -11,6 +11,7 @@ interface Props {
   item: MediaItem;
   onIncrement: (item: MediaItem) => void;
   onEdit: (item: MediaItem) => void;
+  onEditProgress: (item: MediaItem) => void;
   onDelete: (item: MediaItem) => void;
 }
 
@@ -29,7 +30,7 @@ const statusColor = (s: string) => {
   }
 };
 
-export const MediaCard = ({ item, onIncrement, onEdit, onDelete }: Props) => {
+export const MediaCard = ({ item, onIncrement, onEdit, onEditProgress, onDelete }: Props) => {
   const [bumping, setBumping] = useState(false);
   const progress = item.total_eps && item.total_eps > 0
     ? Math.min(100, (item.current_ep / item.total_eps) * 100)
@@ -73,7 +74,12 @@ export const MediaCard = ({ item, onIncrement, onEdit, onDelete }: Props) => {
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-baseline gap-2">
+          <button
+            type="button"
+            onClick={() => onEditProgress(item)}
+            title="Edit season & episode"
+            className="flex items-baseline gap-2 rounded-md px-1.5 -mx-1.5 py-0.5 hover:bg-muted/40 transition-colors text-left"
+          >
             {item.type !== "Movie" && (
               <span className="text-sm font-medium text-muted-foreground">
                 S{item.current_season}
@@ -90,7 +96,8 @@ export const MediaCard = ({ item, onIncrement, onEdit, onDelete }: Props) => {
             ) : (
               <span className="text-sm text-muted-foreground">eps</span>
             )}
-          </div>
+            <Pencil className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-50" />
+          </button>
           {item.status !== "Completed" && (
             <Button size="sm" onClick={handleBump} className="gap-1 h-8">
               <Plus className="h-3.5 w-3.5" />
