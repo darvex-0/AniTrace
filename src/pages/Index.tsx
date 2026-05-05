@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { MediaCard } from "@/components/MediaCard";
 import { MediaDialog } from "@/components/MediaDialog";
+import { ProgressDialog } from "@/components/ProgressDialog";
 import { MEDIA_STATUSES, type MediaItem } from "@/lib/types";
 
 const Index = () => {
