@@ -121,10 +121,15 @@ export const MediaCard = ({ item, onIncrement, onEdit, onDelete }: Props) => {
               href={item.source_link}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-primary hover:text-primary-glow font-medium shrink-0"
+              className="flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-md px-2.5 py-1 text-xs font-medium transition-colors shrink-0"
             >
               <ExternalLink className="h-3 w-3" />
-              {item.source_name || "Resume"}
+              <span>Resume</span>
+              {item.type !== "Movie" && (
+                <span className="opacity-70">
+                  S{item.current_season} · Ep {item.current_ep}
+                </span>
+              )}
             </a>
           )}
         </div>
