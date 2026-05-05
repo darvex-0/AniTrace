@@ -119,7 +119,10 @@ const Index = () => {
     }
   };
 
-  const handleSaveProgress = async (id: string, data: { current_season: number; current_ep: number }) => {
+  const handleSaveProgress = async (
+    id: string,
+    data: { current_season: number; current_ep: number; notes: string | null }
+  ) => {
     const target = items.find((i) => i.id === id);
     const isComplete = !!(target?.total_eps && data.current_ep >= target.total_eps);
     const last_watched = new Date().toISOString();
