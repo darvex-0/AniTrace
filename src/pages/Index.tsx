@@ -25,6 +25,7 @@ const Index = () => {
   const [statusFilter, setStatusFilter] = useState<string>("Watching");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<MediaItem | null>(null);
+  const [progressTarget, setProgressTarget] = useState<MediaItem | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<MediaItem | null>(null);
 
   useEffect(() => {
