@@ -95,27 +95,50 @@ const Index = () => {
   };
 
   const handleIncrement = async (item: MediaItem) => {
-    const next = item.current_ep + 1;
-    const isComplete = item.total_eps && next >= item.total_eps;
+    const last_watched = new Date().toISOString();
+    let nextEp = item.current_ep + 1;
+    let nextSeason = item.current_season ?? 1;
+    let rolledOver = false;
+    let isComplete = false;
+
+    if (item.total_eps && nextEp > item.total_eps) {
+      // Finished the current season — roll over to next season if there is one
+      if (!item.total_seasons || nextSeason < item.total_seasons) {
+        nextSeason = nextSeason + 1;
+        nextEp = 1;
+        rolledOver = true;
+      } else {
+        // Final season finished
+        nextEp = item.total_eps;
+        isComplete = true;
+      }
+    } else if (item.total_eps && nextEp === item.total_eps) {
+      // Reached the last episode of a season — only "Completed" if it's the last season
+      if (item.total_seasons && nextSeason >= item.total_seasons) {
+        isComplete = true;
+      }
+    }
+
+    const update = {
+      current_ep: nextEp,
+      current_season: nextSeason,
+      last_watched,
+      ...(isComplete ? { status: "Completed" as const } : {}),
+    };
+
     // Optimistic
     setItems((prev) => prev.map((i) =>
-      i.id === item.id
-        ? { ...i, current_ep: next, last_watched: new Date().toISOString(), status: isComplete ? "Completed" : i.status }
-        : i
+      i.id === item.id ? { ...i, ...update, status: isComplete ? "Completed" : i.status } : i
     ));
-    const { error } = await supabase
-      .from("media")
-      .update({
-        current_ep: next,
-        last_watched: new Date().toISOString(),
-        ...(isComplete ? { status: "Completed" } : {}),
-      })
-      .eq("id", item.id);
+
+    const { error } = await supabase.from("media").update(update).eq("id", item.id);
     if (error) {
       toast.error("Failed to update");
       loadItems();
     } else if (isComplete) {
       toast.success(`Finished ${item.title}! 🎉`);
+    } else if (rolledOver) {
+      toast.success(`Rolled over to Season ${nextSeason} · Ep 1`);
     }
   };
 
