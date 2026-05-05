@@ -241,6 +241,13 @@ const Index = () => {
         onSave={handleSave}
       />
 
+      <ProgressDialog
+        open={!!progressTarget}
+        onOpenChange={(o) => !o && setProgressTarget(null)}
+        item={progressTarget}
+        onSave={handleSaveProgress}
+      />
+
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
