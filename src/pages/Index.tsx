@@ -119,6 +119,27 @@ const Index = () => {
     }
   };
 
+  const handleSaveProgress = async (id: string, data: { current_season: number; current_ep: number }) => {
+    const target = items.find((i) => i.id === id);
+    const isComplete = !!(target?.total_eps && data.current_ep >= target.total_eps);
+    const last_watched = new Date().toISOString();
+    setItems((prev) => prev.map((i) =>
+      i.id === id
+        ? { ...i, ...data, last_watched, status: isComplete ? "Completed" : i.status }
+        : i
+    ));
+    const { error } = await supabase
+      .from("media")
+      .update({ ...data, last_watched, ...(isComplete ? { status: "Completed" } : {}) })
+      .eq("id", id);
+    if (error) {
+      toast.error("Failed to update progress");
+      loadItems();
+    } else {
+      toast.success("Progress updated");
+    }
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
     const { error } = await supabase.from("media").delete().eq("id", deleteTarget.id);
