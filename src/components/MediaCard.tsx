@@ -74,7 +74,12 @@ export const MediaCard = ({ item, onIncrement, onEdit, onEditProgress, onDelete 
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-baseline gap-2">
+          <button
+            type="button"
+            onClick={() => onEditProgress(item)}
+            title="Edit season & episode"
+            className="flex items-baseline gap-2 rounded-md px-1.5 -mx-1.5 py-0.5 hover:bg-muted/40 transition-colors text-left"
+          >
             {item.type !== "Movie" && (
               <span className="text-sm font-medium text-muted-foreground">
                 S{item.current_season}
@@ -91,7 +96,8 @@ export const MediaCard = ({ item, onIncrement, onEdit, onEditProgress, onDelete 
             ) : (
               <span className="text-sm text-muted-foreground">eps</span>
             )}
-          </div>
+            <Pencil className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-50" />
+          </button>
           {item.status !== "Completed" && (
             <Button size="sm" onClick={handleBump} className="gap-1 h-8">
               <Plus className="h-3.5 w-3.5" />
