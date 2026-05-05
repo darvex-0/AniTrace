@@ -83,7 +83,7 @@ export const ProgressDialog = ({ open, onOpenChange, item, onSave }: Props) => {
     }
     setSaving(true);
     try {
-      await onSave(item.id, parsed.data);
+      await onSave(item.id, parsed.data as { current_season: number; current_ep: number; notes: string | null });
       onOpenChange(false);
     } finally {
       setSaving(false);
