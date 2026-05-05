@@ -11,6 +11,7 @@ interface Props {
   item: MediaItem;
   onIncrement: (item: MediaItem) => void;
   onEdit: (item: MediaItem) => void;
+  onEditProgress: (item: MediaItem) => void;
   onDelete: (item: MediaItem) => void;
 }
 
