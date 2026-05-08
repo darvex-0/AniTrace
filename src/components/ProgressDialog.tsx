@@ -67,6 +67,17 @@ export const ProgressDialog = ({ open, onOpenChange, item, onSave }: Props) => {
   if (!item || !schema) return null;
   const isMovie = item.type === "Movie";
 
+  const isComplete = !!maxSeason && !!totalEpsForSeason && season === maxSeason && episode === totalEpsForSeason;
+  const resumeText = isMovie
+    ? `Ep ${episode}`
+    : `S${season} · Ep ${episode}`;
+
+  const resumePreviewClass = epError
+    ? "border-destructive bg-destructive/10 text-destructive"
+    : isComplete
+    ? "border-success bg-success/10 text-success"
+    : "border-border bg-muted/40 text-foreground";
+
   const bumpSeason = (delta: number) => {
     setSeason((s) => {
       const next = s + delta;
@@ -115,12 +126,6 @@ export const ProgressDialog = ({ open, onOpenChange, item, onSave }: Props) => {
   };
 
   return (
-  const isComplete = !!maxSeason && !!totalEpsForSeason && season === maxSeason && episode === totalEpsForSeason;
-  const resumeText = isMovie
-    ? `Ep ${episode}`
-    : `S${season} · Ep ${episode}`;
-
-  return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -128,13 +133,10 @@ export const ProgressDialog = ({ open, onOpenChange, item, onSave }: Props) => {
           <DialogDescription className="truncate">{item.title}</DialogDescription>
         </DialogHeader>
 
-        <div className="flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors
-          ${epError ? 'border-destructive bg-destructive/10 text-destructive' :
-            isComplete ? 'border-success bg-success/10 text-success' :
-            'border-border bg-muted/40 text-foreground'}">
+        <div className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${resumePreviewClass}`}>
           <Play className="h-3.5 w-3.5" />
           <span>
-            {isComplete ? 'Completed' : `Resume from ${resumeText}`}
+            {isComplete ? "Completed" : `Resume from ${resumeText}`}
           </span>
         </div>
 
