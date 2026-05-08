@@ -178,8 +178,16 @@ export const ProgressDialog = ({ open, onOpenChange, item, onSave }: Props) => {
                   min={0}
                   max={item.total_eps ?? undefined}
                   value={episode}
-                  onChange={(e) => setEpisode(Math.max(0, parseInt(e.target.value) || 0))}
+                  onChange={(e) => handleEpisodeChange(Math.max(0, parseInt(e.target.value) || 0))}
+                  aria-invalid={!!epError}
+                  aria-describedby={epError ? "pd-e-error" : undefined}
+                  className={epError ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
+                {epError && (
+                  <p id="pd-e-error" className="text-xs text-destructive font-medium">
+                    {epError}
+                  </p>
+                )}
               </div>
             </div>
           )}
