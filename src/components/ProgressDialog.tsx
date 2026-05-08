@@ -24,37 +24,48 @@ export const ProgressDialog = ({ open, onOpenChange, item, onSave }: Props) => {
   const [episode, setEpisode] = useState(0);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [epError, setEpError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open && item) {
       setSeason(item.current_season ?? 1);
       setEpisode(item.current_ep ?? 0);
       setNotes(item.notes ?? "");
+      setEpError(null);
     }
   }, [open, item]);
 
+  const totalEpsForSeason = item?.total_eps ?? null;
+  const maxSeason = item?.total_seasons && item.total_seasons > 0 ? item.total_seasons : undefined;
+
+  const validateEpisode = (ep: number, s: number): string | null => {
+    if (totalEpsForSeason && ep > totalEpsForSeason) {
+      return `Season ${s} only has ${totalEpsForSeason} episode${totalEpsForSeason > 1 ? "s" : ""}. You can't set episode ${ep}.`;
+    }
+    return null;
+  };
+
   const schema = useMemo(() => {
     if (!item) return null;
-    const maxSeason = item.total_seasons && item.total_seasons > 0 ? item.total_seasons : 999;
+    const maxSeasonNum = item.total_seasons && item.total_seasons > 0 ? item.total_seasons : 999;
     const maxEp = item.total_eps && item.total_eps > 0 ? item.total_eps : 99999;
     return z.object({
       current_season: z
         .number()
         .int()
         .min(1, "Season must be at least 1")
-        .max(maxSeason, item.total_seasons ? `Season can't exceed ${maxSeason}` : "Season too large"),
+        .max(maxSeasonNum, item.total_seasons ? `Season can't exceed ${maxSeasonNum}` : "Season too large"),
       current_ep: z
         .number()
         .int()
         .min(0, "Episode can't be negative")
-        .max(maxEp, item.total_eps ? `Episode can't exceed ${maxEp}` : "Episode too large"),
+        .max(maxEp, item.total_eps ? `Episode can't exceed ${maxEp} for this season` : "Episode too large"),
       notes: z.string().trim().max(2000, "Notes must be under 2000 characters").nullable(),
     });
   }, [item]);
 
   if (!item || !schema) return null;
   const isMovie = item.type === "Movie";
-  const maxSeason = item.total_seasons && item.total_seasons > 0 ? item.total_seasons : undefined;
 
   const bumpSeason = (delta: number) => {
     setSeason((s) => {
@@ -64,14 +75,27 @@ export const ProgressDialog = ({ open, onOpenChange, item, onSave }: Props) => {
         toast.error(`This title only has ${maxSeason} season${maxSeason > 1 ? "s" : ""}`);
         return s;
       }
-      // when moving to a new season, reset the episode counter for convenience
       if (delta > 0) setEpisode(0);
+      setEpError(null);
       return next;
     });
   };
 
+  const handleEpisodeChange = (val: number) => {
+    setEpisode(val);
+    setEpError(validateEpisode(val, season));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const epValidation = validateEpisode(episode, season);
+    if (epValidation) {
+      setEpError(epValidation);
+      toast.error(epValidation);
+      return;
+    }
+
     const parsed = schema.safeParse({
       current_season: season,
       current_ep: episode,
@@ -154,8 +178,16 @@ export const ProgressDialog = ({ open, onOpenChange, item, onSave }: Props) => {
                   min={0}
                   max={item.total_eps ?? undefined}
                   value={episode}
-                  onChange={(e) => setEpisode(Math.max(0, parseInt(e.target.value) || 0))}
+                  onChange={(e) => handleEpisodeChange(Math.max(0, parseInt(e.target.value) || 0))}
+                  aria-invalid={!!epError}
+                  aria-describedby={epError ? "pd-e-error" : undefined}
+                  className={epError ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
+                {epError && (
+                  <p id="pd-e-error" className="text-xs text-destructive font-medium">
+                    {epError}
+                  </p>
+                )}
               </div>
             </div>
           )}
