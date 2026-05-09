@@ -210,6 +210,115 @@ export const MediaDialog = ({ open, onOpenChange, item, allItems = [], onSave }:
             />
           </div>
 
+          <div className="space-y-3 rounded-lg border border-border/60 bg-muted/20 p-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <Label className="text-sm font-semibold">Spin-offs & Related Movies</Label>
+            </div>
+
+            {linkCandidates.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Link2 className="h-3 w-3" /> Link from your library
+                  </span>
+                  {linkedIds.length > 0 && (
+                    <Badge variant="secondary" className="text-[10px] h-5">{linkedIds.length} linked</Badge>
+                  )}
+                </div>
+                <Input
+                  placeholder="Search your library..."
+                  value={linkSearch}
+                  onChange={(e) => setLinkSearch(e.target.value)}
+                  className="h-8 text-sm"
+                />
+                <ScrollArea className="h-32 rounded-md border border-border/50 bg-background/50">
+                  <div className="p-1 space-y-0.5">
+                    {filteredCandidates.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-4">No matches</p>
+                    ) : filteredCandidates.map((c) => {
+                      const checked = linkedIds.includes(c.id);
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => toggleLinked(c.id)}
+                          className={cn(
+                            "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left transition-colors",
+                            checked ? "bg-primary/10 hover:bg-primary/15" : "hover:bg-muted/60"
+                          )}
+                        >
+                          <Checkbox checked={checked} className="pointer-events-none" />
+                          <Badge variant="outline" className="gap-1 text-[10px] h-5 px-1.5">
+                            {typeIcon(c.type)}{c.type}
+                          </Badge>
+                          <span className="text-xs truncate flex-1">{c.title}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Custom entries</span>
+                <Button type="button" size="sm" variant="outline" onClick={addSpinoff} className="h-7 gap-1 text-xs">
+                  <Plus className="h-3 w-3" /> Add
+                </Button>
+              </div>
+              {spinoffs.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">No custom spin-offs yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {spinoffs.map((s, idx) => (
+                    <div key={idx} className="rounded-md border border-border/50 bg-background/50 p-2 space-y-2">
+                      <div className="flex gap-2">
+                        <Input
+                          value={s.title}
+                          onChange={(e) => updateSpinoff(idx, { title: e.target.value })}
+                          placeholder="Spin-off title"
+                          className="h-8 text-sm flex-1"
+                        />
+                        <Select value={s.type} onValueChange={(v) => updateSpinoff(idx, { type: v as MediaType })}>
+                          <SelectTrigger className="h-8 w-28 text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {MEDIA_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                        <Button type="button" size="icon" variant="ghost" onClick={() => removeSpinoff(idx)} className="h-8 w-8 text-destructive">
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <Input
+                          value={s.link ?? ""}
+                          onChange={(e) => updateSpinoff(idx, { link: e.target.value })}
+                          placeholder="https://... (optional)"
+                          className="h-8 text-sm flex-1"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => updateSpinoff(idx, { watched: !s.watched })}
+                          className={cn(
+                            "h-8 px-2 rounded-md border text-xs flex items-center gap-1 transition-colors shrink-0",
+                            s.watched
+                              ? "bg-success/15 border-success/40 text-success"
+                              : "bg-background border-border text-muted-foreground hover:bg-muted"
+                          )}
+                        >
+                          <Check className="h-3 w-3" />
+                          Watched
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
