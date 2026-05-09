@@ -265,6 +265,7 @@ const Index = () => {
         open={dialogOpen}
         onOpenChange={(o) => { setDialogOpen(o); if (!o) setEditing(null); }}
         item={editing}
+        allItems={items}
         onSave={handleSave}
       />
 
