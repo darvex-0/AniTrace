@@ -120,6 +120,9 @@ export const MediaCard = ({ item, allItems = [], onIncrement, onEdit, onEditProg
           </p>
         )}
 
+        <SpinoffsSection spinoffs={spinoffs} linked={linkedItems} onOpenLinked={onEdit} />
+
+
         <div className="flex items-center justify-between pt-1 text-xs text-muted-foreground">
           <div className="flex items-center gap-1 min-w-0">
             <Clock className="h-3 w-3 shrink-0" />
