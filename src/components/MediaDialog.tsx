@@ -113,7 +113,19 @@ export const MediaDialog = ({ open, onOpenChange, item, allItems = [], onSave }:
     }
     setSaving(true);
     try {
-      await onSave(parsed.data as Partial<MediaItem>);
+      const cleanSpinoffs = spinoffs
+        .filter((s) => s.title.trim())
+        .map((s) => ({
+          title: s.title.trim(),
+          type: s.type,
+          link: s.link?.trim() || null,
+          watched: !!s.watched,
+        }));
+      await onSave({
+        ...(parsed.data as Partial<MediaItem>),
+        linked_spinoff_ids: linkedIds,
+        spinoffs: cleanSpinoffs,
+      });
       onOpenChange(false);
     } finally {
       setSaving(false);
