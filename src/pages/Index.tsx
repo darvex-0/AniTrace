@@ -47,7 +47,7 @@ const Index = () => {
     if (error) {
       toast.error("Failed to load library");
     } else {
-      setItems((data ?? []) as MediaItem[]);
+      setItems((data ?? []) as unknown as MediaItem[]);
     }
     setLoading(false);
   };
