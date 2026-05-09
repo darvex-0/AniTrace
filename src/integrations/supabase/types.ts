@@ -21,9 +21,11 @@ export type Database = {
           current_season: number
           id: string
           last_watched: string | null
+          linked_spinoff_ids: string[]
           notes: string | null
           source_link: string | null
           source_name: string | null
+          spinoffs: Json
           status: string
           title: string
           total_eps: number | null
@@ -38,9 +40,11 @@ export type Database = {
           current_season?: number
           id?: string
           last_watched?: string | null
+          linked_spinoff_ids?: string[]
           notes?: string | null
           source_link?: string | null
           source_name?: string | null
+          spinoffs?: Json
           status?: string
           title: string
           total_eps?: number | null
@@ -55,9 +59,11 @@ export type Database = {
           current_season?: number
           id?: string
           last_watched?: string | null
+          linked_spinoff_ids?: string[]
           notes?: string | null
           source_link?: string | null
           source_name?: string | null
+          spinoffs?: Json
           status?: string
           title?: string
           total_eps?: number | null
