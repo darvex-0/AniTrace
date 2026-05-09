@@ -79,14 +79,14 @@ const Index = () => {
     if (editing) {
       const { error } = await supabase
         .from("media")
-        .update(data)
+        .update(data as any)
         .eq("id", editing.id);
       if (error) { toast.error(error.message); return; }
       toast.success("Updated");
     } else {
       const { error } = await supabase
         .from("media")
-        .insert({ ...data, user_id: user.id, title: data.title! });
+        .insert({ ...data, user_id: user.id, title: data.title! } as any);
       if (error) { toast.error(error.message); return; }
       toast.success("Added to your library");
     }
