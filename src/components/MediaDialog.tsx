@@ -1,13 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
+import { Plus, X, Check, Sparkles, Film, Tv2, Link2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { MEDIA_STATUSES, MEDIA_TYPES, type MediaItem, type MediaStatus, type MediaType } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { MEDIA_STATUSES, MEDIA_TYPES, type MediaItem, type MediaStatus, type MediaType, type Spinoff } from "@/lib/types";
 
 const schema = z.object({
   title: z.string().trim().min(1, "Title is required").max(200),
