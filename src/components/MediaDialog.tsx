@@ -69,8 +69,29 @@ export const MediaDialog = ({ open, onOpenChange, item, allItems = [], onSave }:
       setSourceName(item?.source_name ?? "");
       setSourceLink(item?.source_link ?? "");
       setNotes(item?.notes ?? "");
+      setLinkedIds(item?.linked_spinoff_ids ?? []);
+      setSpinoffs((item?.spinoffs ?? []) as Spinoff[]);
+      setLinkSearch("");
     }
   }, [open, item]);
+
+  const linkCandidates = useMemo(
+    () => allItems.filter((i) => i.id !== item?.id),
+    [allItems, item?.id]
+  );
+  const filteredCandidates = useMemo(() => {
+    const q = linkSearch.trim().toLowerCase();
+    if (!q) return linkCandidates;
+    return linkCandidates.filter((i) => i.title.toLowerCase().includes(q));
+  }, [linkCandidates, linkSearch]);
+
+  const toggleLinked = (id: string) => {
+    setLinkedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  };
+  const addSpinoff = () => setSpinoffs((p) => [...p, { title: "", type: "Movie", link: "", watched: false }]);
+  const updateSpinoff = (idx: number, patch: Partial<Spinoff>) =>
+    setSpinoffs((p) => p.map((s, i) => i === idx ? { ...s, ...patch } : s));
+  const removeSpinoff = (idx: number) => setSpinoffs((p) => p.filter((_, i) => i !== idx));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
