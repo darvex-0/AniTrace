@@ -4,6 +4,13 @@ export type MediaStatus = "Watching" | "On-Hold" | "Completed" | "Plan to Watch"
 export const MEDIA_TYPES: MediaType[] = ["Anime", "Series", "Movie"];
 export const MEDIA_STATUSES: MediaStatus[] = ["Watching", "On-Hold", "Completed", "Plan to Watch"];
 
+export interface Spinoff {
+  title: string;
+  type: MediaType;
+  link?: string | null;
+  watched?: boolean;
+}
+
 export interface MediaItem {
   id: string;
   user_id: string;
