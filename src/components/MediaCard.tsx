@@ -32,11 +32,15 @@ const statusColor = (s: string) => {
   }
 };
 
-export const MediaCard = ({ item, onIncrement, onEdit, onEditProgress, onDelete }: Props) => {
+export const MediaCard = ({ item, allItems = [], onIncrement, onEdit, onEditProgress, onDelete }: Props) => {
   const [bumping, setBumping] = useState(false);
   const progress = item.total_eps && item.total_eps > 0
     ? Math.min(100, (item.current_ep / item.total_eps) * 100)
     : 0;
+  const linkedItems = (item.linked_spinoff_ids ?? [])
+    .map((id) => allItems.find((x) => x.id === id))
+    .filter(Boolean) as MediaItem[];
+  const spinoffs = (item.spinoffs ?? []) as NonNullable<MediaItem["spinoffs"]>;
 
   const handleBump = async () => {
     setBumping(true);
