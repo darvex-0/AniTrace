@@ -27,4 +27,6 @@ export interface MediaItem {
   last_watched: string | null;
   created_at: string;
   updated_at: string;
+  spinoffs?: Spinoff[] | null;
+  linked_spinoff_ids?: string[] | null;
 }
