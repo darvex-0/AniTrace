@@ -31,8 +31,15 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   item: MediaItem | null;
+  allItems?: MediaItem[];
   onSave: (data: Partial<MediaItem>) => Promise<void>;
 }
+
+const typeIcon = (t: string) => {
+  if (t === "Anime") return <Sparkles className="h-3 w-3" />;
+  if (t === "Movie") return <Film className="h-3 w-3" />;
+  return <Tv2 className="h-3 w-3" />;
+};
 
 export const MediaDialog = ({ open, onOpenChange, item, onSave }: Props) => {
   const [title, setTitle] = useState("");
