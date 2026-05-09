@@ -47,7 +47,7 @@ const Index = () => {
     if (error) {
       toast.error("Failed to load library");
     } else {
-      setItems((data ?? []) as MediaItem[]);
+      setItems((data ?? []) as unknown as MediaItem[]);
     }
     setLoading(false);
   };
@@ -79,14 +79,14 @@ const Index = () => {
     if (editing) {
       const { error } = await supabase
         .from("media")
-        .update(data)
+        .update(data as any)
         .eq("id", editing.id);
       if (error) { toast.error(error.message); return; }
       toast.success("Updated");
     } else {
       const { error } = await supabase
         .from("media")
-        .insert({ ...data, user_id: user.id, title: data.title! });
+        .insert({ ...data, user_id: user.id, title: data.title! } as any);
       if (error) { toast.error(error.message); return; }
       toast.success("Added to your library");
     }
@@ -250,6 +250,7 @@ const Index = () => {
               <MediaCard
                 key={item.id}
                 item={item}
+                allItems={items}
                 onIncrement={handleIncrement}
                 onEdit={(i) => { setEditing(i); setDialogOpen(true); }}
                 onEditProgress={(i) => setProgressTarget(i)}
@@ -264,6 +265,7 @@ const Index = () => {
         open={dialogOpen}
         onOpenChange={(o) => { setDialogOpen(o); if (!o) setEditing(null); }}
         item={editing}
+        allItems={items}
         onSave={handleSave}
       />
 

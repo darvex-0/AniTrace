@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import type { MediaItem } from "@/lib/types";
+import { SpinoffsSection } from "./SpinoffsSection";
 
 interface Props {
   item: MediaItem;
+  allItems?: MediaItem[];
   onIncrement: (item: MediaItem) => void;
   onEdit: (item: MediaItem) => void;
   onEditProgress: (item: MediaItem) => void;
@@ -30,11 +32,15 @@ const statusColor = (s: string) => {
   }
 };
 
-export const MediaCard = ({ item, onIncrement, onEdit, onEditProgress, onDelete }: Props) => {
+export const MediaCard = ({ item, allItems = [], onIncrement, onEdit, onEditProgress, onDelete }: Props) => {
   const [bumping, setBumping] = useState(false);
   const progress = item.total_eps && item.total_eps > 0
     ? Math.min(100, (item.current_ep / item.total_eps) * 100)
     : 0;
+  const linkedItems = (item.linked_spinoff_ids ?? [])
+    .map((id) => allItems.find((x) => x.id === id))
+    .filter(Boolean) as MediaItem[];
+  const spinoffs = (item.spinoffs ?? []) as NonNullable<MediaItem["spinoffs"]>;
 
   const handleBump = async () => {
     setBumping(true);
@@ -113,6 +119,9 @@ export const MediaCard = ({ item, onIncrement, onEdit, onEditProgress, onDelete 
             {item.notes}
           </p>
         )}
+
+        <SpinoffsSection spinoffs={spinoffs} linked={linkedItems} onOpenLinked={onEdit} />
+
 
         <div className="flex items-center justify-between pt-1 text-xs text-muted-foreground">
           <div className="flex items-center gap-1 min-w-0">
