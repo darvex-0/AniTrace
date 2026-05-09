@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import type { MediaItem } from "@/lib/types";
+import { SpinoffsSection } from "./SpinoffsSection";
 
 interface Props {
   item: MediaItem;
+  allItems?: MediaItem[];
   onIncrement: (item: MediaItem) => void;
   onEdit: (item: MediaItem) => void;
   onEditProgress: (item: MediaItem) => void;
