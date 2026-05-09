@@ -250,6 +250,7 @@ const Index = () => {
               <MediaCard
                 key={item.id}
                 item={item}
+                allItems={items}
                 onIncrement={handleIncrement}
                 onEdit={(i) => { setEditing(i); setDialogOpen(true); }}
                 onEditProgress={(i) => setProgressTarget(i)}
