@@ -41,7 +41,7 @@ const typeIcon = (t: string) => {
   return <Tv2 className="h-3 w-3" />;
 };
 
-export const MediaDialog = ({ open, onOpenChange, item, onSave }: Props) => {
+export const MediaDialog = ({ open, onOpenChange, item, allItems = [], onSave }: Props) => {
   const [title, setTitle] = useState("");
   const [type, setType] = useState<MediaType>("Series");
   const [status, setStatus] = useState<MediaStatus>("Watching");
@@ -52,6 +52,9 @@ export const MediaDialog = ({ open, onOpenChange, item, onSave }: Props) => {
   const [sourceName, setSourceName] = useState("");
   const [sourceLink, setSourceLink] = useState("");
   const [notes, setNotes] = useState("");
+  const [linkedIds, setLinkedIds] = useState<string[]>([]);
+  const [spinoffs, setSpinoffs] = useState<Spinoff[]>([]);
+  const [linkSearch, setLinkSearch] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
