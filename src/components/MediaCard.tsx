@@ -43,9 +43,13 @@ export const MediaCard = ({ item, allItems = [], onIncrement, onEdit, onEditProg
   const spinoffs = (item.spinoffs ?? []) as NonNullable<MediaItem["spinoffs"]>;
 
   const handleBump = async () => {
+    if (bumping) return; // guard against rapid re-entry
     setBumping(true);
-    await onIncrement(item);
-    setTimeout(() => setBumping(false), 300);
+    try {
+      await onIncrement(item);
+    } finally {
+      setTimeout(() => setBumping(false), 300);
+    }
   };
 
   return (
