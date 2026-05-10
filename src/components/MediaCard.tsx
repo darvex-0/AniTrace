@@ -124,7 +124,12 @@ export const MediaCard = ({ item, allItems = [], onIncrement, onEdit, onEditProg
           </p>
         )}
 
-        <SpinoffsSection spinoffs={spinoffs} linked={linkedItems} onOpenLinked={onEdit} />
+        <SpinoffsSection
+          spinoffs={spinoffs}
+          linked={linkedItems}
+          onOpenLinked={onEdit}
+          onAdd={() => onEdit(item)}
+        />
 
 
         <div className="flex items-center justify-between pt-1 text-xs text-muted-foreground">
