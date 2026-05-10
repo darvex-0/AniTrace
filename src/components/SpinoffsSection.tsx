@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, Film, Tv2, Sparkles, ExternalLink, Check, Link2 } from "lucide-react";
+import { ChevronDown, Film, Tv2, Sparkles, ExternalLink, Check, Link2, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { MediaItem, Spinoff } from "@/lib/types";
@@ -14,18 +14,32 @@ interface Props {
   spinoffs: Spinoff[];
   linked: MediaItem[];
   onOpenLinked?: (item: MediaItem) => void;
+  onAdd?: () => void;
 }
 
-export const SpinoffsSection = ({ spinoffs, linked, onOpenLinked }: Props) => {
+export const SpinoffsSection = ({ spinoffs, linked, onOpenLinked, onAdd }: Props) => {
   const [open, setOpen] = useState(false);
   const total = spinoffs.length + linked.length;
-  if (total === 0) return null;
+
+  if (total === 0) {
+    if (!onAdd) return null;
+    return (
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onAdd(); }}
+        className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-border/60 bg-muted/10 px-3 py-1.5 text-xs text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-colors"
+      >
+        <Plus className="h-3 w-3" />
+        Add spin-off or related movie
+      </button>
+    );
+  }
 
   return (
     <div className="rounded-lg border border-border/60 bg-muted/20 overflow-hidden">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
         className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium hover:bg-muted/40 transition-colors"
       >
         <span className="flex items-center gap-2">
@@ -37,22 +51,27 @@ export const SpinoffsSection = ({ spinoffs, linked, onOpenLinked }: Props) => {
       </button>
       {open && (
         <ul className="px-3 pb-3 pt-1 space-y-1.5">
-          {linked.map((it) => (
-            <li key={`l-${it.id}`}>
-              <button
-                type="button"
-                onClick={() => onOpenLinked?.(it)}
-                className="w-full flex items-center gap-2 text-left rounded-md px-2 py-1.5 bg-primary/5 hover:bg-primary/10 border border-primary/20 transition-colors"
-              >
-                <Link2 className="h-3 w-3 text-primary shrink-0" />
-                <Badge variant="outline" className="gap-1 text-[10px] h-5 px-1.5">
-                  {typeIcon(it.type)}{it.type}
-                </Badge>
-                <span className="text-xs font-medium truncate flex-1">{it.title}</span>
-                <span className="text-[10px] text-muted-foreground shrink-0">{it.status}</span>
-              </button>
-            </li>
-          ))}
+          {linked.map((it) => {
+            const prog = it.total_eps && it.total_eps > 0
+              ? `${Math.round((it.current_ep / it.total_eps) * 100)}%`
+              : it.status;
+            return (
+              <li key={`l-${it.id}`}>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onOpenLinked?.(it); }}
+                  className="w-full flex items-center gap-2 text-left rounded-md px-2 py-1.5 bg-primary/5 hover:bg-primary/10 border border-primary/20 transition-colors"
+                >
+                  <Link2 className="h-3 w-3 text-primary shrink-0" />
+                  <Badge variant="outline" className="gap-1 text-[10px] h-5 px-1.5">
+                    {typeIcon(it.type)}{it.type}
+                  </Badge>
+                  <span className="text-xs font-medium truncate flex-1">{it.title}</span>
+                  <span className="text-[10px] text-muted-foreground shrink-0">{prog}</span>
+                </button>
+              </li>
+            );
+          })}
           {spinoffs.map((s, idx) => (
             <li
               key={`s-${idx}`}
@@ -78,6 +97,17 @@ export const SpinoffsSection = ({ spinoffs, linked, onOpenLinked }: Props) => {
               )}
             </li>
           ))}
+          {onAdd && (
+            <li>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onAdd(); }}
+                className="w-full flex items-center justify-center gap-1 rounded-md px-2 py-1 text-[11px] text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors border border-dashed border-border/50"
+              >
+                <Plus className="h-3 w-3" /> Add another
+              </button>
+            </li>
+          )}
         </ul>
       )}
     </div>
