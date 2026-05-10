@@ -79,17 +79,15 @@ export const ProgressDialog = ({ open, onOpenChange, item, onSave }: Props) => {
     : "border-border bg-muted/40 text-foreground";
 
   const bumpSeason = (delta: number) => {
-    setSeason((s) => {
-      const next = s + delta;
-      if (next < 1) return 1;
-      if (maxSeason && next > maxSeason) {
-        toast.error(`This title only has ${maxSeason} season${maxSeason > 1 ? "s" : ""}`);
-        return s;
-      }
-      if (delta > 0) setEpisode(0);
-      setEpError(null);
-      return next;
-    });
+    const next = season + delta;
+    if (next < 1) return;
+    if (maxSeason && next > maxSeason) {
+      toast.error(`This title only has ${maxSeason} season${maxSeason > 1 ? "s" : ""}`);
+      return;
+    }
+    setSeason(next);
+    if (delta > 0) setEpisode(0);
+    setEpError(null);
   };
 
   const handleEpisodeChange = (val: number) => {
