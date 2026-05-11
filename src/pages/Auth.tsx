@@ -2,8 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { Tv, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signInWithPopup, 
+  GoogleAuthProvider,
+  updateProfile
+} from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,47 +48,47 @@ const Auth = () => {
     e.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setSubmitting(false);
-    if (error) {
-      toast.error(error.message === "Invalid login credentials" ? "Wrong email or password" : error.message);
-      return;
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      navigate("/", { replace: true });
+    } catch (error: any) {
+      toast.error(error.message.includes("auth/invalid-credential") ? "Wrong email or password" : error.message);
+    } finally {
+      setSubmitting(false);
     }
-    navigate("/", { replace: true });
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: window.location.origin,
-        data: { display_name: displayName || email.split("@")[0] },
-      },
-    });
-    setSubmitting(false);
-    if (error) {
-      toast.error(error.message.includes("already") ? "Account already exists. Sign in instead." : error.message);
-      return;
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      if (displayName || email.split("@")[0]) {
+        await updateProfile(userCredential.user, {
+          displayName: displayName || email.split("@")[0]
+        });
+      }
+      toast.success("Account created! Welcome to AniTrace.");
+      navigate("/", { replace: true });
+    } catch (error: any) {
+      toast.error(error.message.includes("auth/email-already-in-use") ? "Account already exists. Sign in instead." : error.message);
+    } finally {
+      setSubmitting(false);
     }
-    toast.success("Check your email to verify your account!");
   };
 
   const handleGoogle = async () => {
     setSubmitting(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
-      setSubmitting(false);
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      navigate("/", { replace: true });
+    } catch (error: any) {
       toast.error("Google sign-in failed");
-      return;
+    } finally {
+      setSubmitting(false);
     }
-    if (result.redirected) return;
-    navigate("/", { replace: true });
   };
 
   return (
@@ -93,7 +99,7 @@ const Auth = () => {
             <div className="p-2 rounded-xl" style={{ background: "var(--gradient-primary)" }}>
               <Tv className="h-6 w-6 text-primary-foreground" />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight">WatchLog</h1>
+            <h1 className="text-3xl font-bold tracking-tight">AniTrace</h1>
           </div>
           <p className="text-muted-foreground">Never lose your spot again.</p>
         </div>

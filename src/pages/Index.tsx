@@ -1,7 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Search, Tv, LogOut, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { 
+  collection, 
+  query, 
+  where, 
+  orderBy, 
+  getDocs, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc, 
+  serverTimestamp 
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,22 +46,37 @@ const Index = () => {
 
   useEffect(() => {
     if (!user) return;
-    document.title = "WatchLog — Track your shows, anime & movies";
+    document.title = "AniTrace — Track your shows, anime & movies";
   }, [user]);
 
   const loadItems = async () => {
     if (!user) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from("media")
-      .select("*")
-      .order("updated_at", { ascending: false });
-    if (error) {
+    try {
+      const q = query(
+        collection(db, "media"),
+        where("user_id", "==", user.uid),
+        orderBy("updated_at", "desc")
+      );
+      const querySnapshot = await getDocs(q);
+      const data = querySnapshot.docs.map(doc => {
+        const d = doc.data();
+        return {
+          ...d,
+          id: doc.id,
+          // Convert Firestore timestamps to ISO strings if they exist
+          created_at: d.created_at?.toDate?.()?.toISOString() || d.created_at || new Date().toISOString(),
+          updated_at: d.updated_at?.toDate?.()?.toISOString() || d.updated_at || new Date().toISOString(),
+          last_watched: d.last_watched?.toDate?.()?.toISOString() || d.last_watched || null,
+        };
+      }) as MediaItem[];
+      setItems(data);
+    } catch (error) {
+      console.error("Error loading library:", error);
       toast.error("Failed to load library");
-    } else {
-      setItems((data ?? []) as unknown as MediaItem[]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -76,22 +103,32 @@ const Index = () => {
 
   const handleSave = async (data: Partial<MediaItem>) => {
     if (!user) return;
-    if (editing) {
-      const { error } = await supabase
-        .from("media")
-        .update(data as any)
-        .eq("id", editing.id);
-      if (error) { toast.error(error.message); return; }
-      toast.success("Updated");
-    } else {
-      const { error } = await supabase
-        .from("media")
-        .insert({ ...data, user_id: user.id, title: data.title! } as any);
-      if (error) { toast.error(error.message); return; }
-      toast.success("Added to your library");
+    try {
+      if (editing) {
+        const mediaRef = doc(db, "media", editing.id);
+        await updateDoc(mediaRef, {
+          ...data,
+          updated_at: serverTimestamp()
+        });
+        toast.success("Updated");
+      } else {
+        await addDoc(collection(db, "media"), {
+          ...data,
+          user_id: user.uid,
+          created_at: serverTimestamp(),
+          updated_at: serverTimestamp(),
+          current_ep: data.current_ep || 0,
+          current_season: data.current_season || 1,
+          status: data.status || "Watching"
+        });
+        toast.success("Added to your library");
+      }
+      setEditing(null);
+      setDialogOpen(false);
+      loadItems();
+    } catch (error: any) {
+      toast.error(error.message);
     }
-    setEditing(null);
-    loadItems();
   };
 
   const handleIncrement = async (item: MediaItem) => {
@@ -102,18 +139,15 @@ const Index = () => {
     let isComplete = false;
 
     if (item.total_eps && nextEp > item.total_eps) {
-      // Finished the current season — roll over to next season if there is one
       if (!item.total_seasons || nextSeason < item.total_seasons) {
         nextSeason = nextSeason + 1;
         nextEp = 1;
         rolledOver = true;
       } else {
-        // Final season finished
         nextEp = item.total_eps;
         isComplete = true;
       }
     } else if (item.total_eps && nextEp === item.total_eps) {
-      // Reached the last episode of a season — only "Completed" if it's the last season
       if (item.total_seasons && nextSeason >= item.total_seasons) {
         isComplete = true;
       }
@@ -123,22 +157,26 @@ const Index = () => {
       current_ep: nextEp,
       current_season: nextSeason,
       last_watched,
+      updated_at: serverTimestamp(),
       ...(isComplete ? { status: "Completed" as const } : {}),
     };
 
     // Optimistic
     setItems((prev) => prev.map((i) =>
-      i.id === item.id ? { ...i, ...update, status: isComplete ? "Completed" : i.status } : i
+      i.id === item.id ? { ...i, ...update as any, status: isComplete ? "Completed" : i.status } : i
     ));
 
-    const { error } = await supabase.from("media").update(update).eq("id", item.id);
-    if (error) {
+    try {
+      const mediaRef = doc(db, "media", item.id);
+      await updateDoc(mediaRef, update);
+      if (isComplete) {
+        toast.success(`Finished ${item.title}! 🎉`);
+      } else if (rolledOver) {
+        toast.success(`Rolled over to Season ${nextSeason} · Ep 1`);
+      }
+    } catch (error) {
       toast.error("Failed to update");
       loadItems();
-    } else if (isComplete) {
-      toast.success(`Finished ${item.title}! 🎉`);
-    } else if (rolledOver) {
-      toast.success(`Rolled over to Season ${nextSeason} · Ep 1`);
     }
   };
 
@@ -149,30 +187,38 @@ const Index = () => {
     const target = items.find((i) => i.id === id);
     const isComplete = !!(target?.total_eps && data.current_ep >= target.total_eps);
     const last_watched = new Date().toISOString();
+    
     setItems((prev) => prev.map((i) =>
       i.id === id
         ? { ...i, ...data, last_watched, status: isComplete ? "Completed" : i.status }
         : i
     ));
-    const { error } = await supabase
-      .from("media")
-      .update({ ...data, last_watched, ...(isComplete ? { status: "Completed" } : {}) })
-      .eq("id", id);
-    if (error) {
+
+    try {
+      const mediaRef = doc(db, "media", id);
+      await updateDoc(mediaRef, {
+        ...data,
+        last_watched,
+        updated_at: serverTimestamp(),
+        ...(isComplete ? { status: "Completed" } : {})
+      });
+      toast.success("Progress updated");
+    } catch (error) {
       toast.error("Failed to update progress");
       loadItems();
-    } else {
-      toast.success("Progress updated");
     }
   };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    const { error } = await supabase.from("media").delete().eq("id", deleteTarget.id);
-    if (error) toast.error(error.message);
-    else toast.success("Removed");
-    setDeleteTarget(null);
-    loadItems();
+    try {
+      await deleteDoc(doc(db, "media", deleteTarget.id));
+      toast.success("Removed");
+      setDeleteTarget(null);
+      loadItems();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
   };
 
   if (authLoading) {
@@ -191,7 +237,7 @@ const Index = () => {
             <div className="p-1.5 rounded-lg" style={{ background: "var(--gradient-primary)" }}>
               <Tv className="h-5 w-5 text-primary-foreground" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight">WatchLog</h1>
+            <h1 className="text-xl font-bold tracking-tight">AniTrace</h1>
           </div>
           <div className="flex items-center gap-2">
             <Button onClick={() => { setEditing(null); setDialogOpen(true); }} className="gap-2">
