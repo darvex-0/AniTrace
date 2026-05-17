@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, Tv, LogOut, Loader2 } from "lucide-react";
+import { Plus, Search, Tv, Loader2 } from "lucide-react";
 import { 
   collection, 
   query, 
@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { MediaCard } from "@/components/MediaCard";
 import { MediaDialog } from "@/components/MediaDialog";
 import { ProgressDialog } from "@/components/ProgressDialog";
+import { UserNav } from "@/components/UserNav";
 import { MEDIA_STATUSES, type MediaItem } from "@/lib/types";
 
 const Index = () => {
@@ -239,13 +240,11 @@ const Index = () => {
             </div>
             <h1 className="text-xl font-bold tracking-tight">AniTrace</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <Button onClick={() => { setEditing(null); setDialogOpen(true); }} className="gap-2">
               <Plus className="h-4 w-4" /> Add
             </Button>
-            <Button variant="ghost" size="icon" onClick={signOut} title="Sign out">
-              <LogOut className="h-4 w-4" />
-            </Button>
+            {user && <UserNav user={user} signOut={signOut} />}
           </div>
         </div>
       </header>

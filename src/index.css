@@ -77,3 +77,29 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
+
+@layer utilities {
+  .anime-speed-lines {
+    background: repeating-linear-gradient(
+      transparent 0,
+      transparent 5px,
+      hsl(var(--primary-glow) / 0.1) 5px,
+      hsl(var(--primary-glow) / 0.1) 10px
+    );
+    background-size: 100% 20px;
+    animation: speed-lines 0.5s linear infinite;
+  }
+
+  @keyframes speed-lines {
+    0% {
+      background-position: 0 0;
+    }
+    100% {
+      background-position: 0 100%;
+    }
+  }
+
+  .shard-blur {
+    box-shadow: 0 0 40px 10px currentColor;
+  }
+}

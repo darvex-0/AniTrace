@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import BackgroundAnimation from "@/components/BackgroundAnimation";
 
 const emailSchema = z.string().trim().email("Invalid email").max(255);
 const passwordSchema = z.string().min(6, "At least 6 characters").max(72);
@@ -92,9 +93,10 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--gradient-hero)" }}>
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+      <BackgroundAnimation />
+      <div className="w-full max-w-md relative z-10">
+        <div className="text-center mb-8 relative">
           <div className="inline-flex items-center gap-2 mb-4">
             <div className="p-2 rounded-xl" style={{ background: "var(--gradient-primary)" }}>
               <Tv className="h-6 w-6 text-primary-foreground" />
