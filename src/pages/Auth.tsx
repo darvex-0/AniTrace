@@ -22,7 +22,7 @@ const POSTERS = [
   "/Anime_img/Bleach.jpg",
   "/Anime_img/Dark.jpg",
   "/Anime_img/DeathNote.jpg",
-  "/Anime_img/Demon_slayer.png",
+  "/Anime_img/BlackClover.jpg",
   "/Anime_img/Dragon_ball.jpg",
   "/Anime_img/GOT.jpg",
   "/Anime_img/HxH.jpg",
@@ -117,17 +117,17 @@ export default function Auth() {
 
   return (
     <div className="flex min-h-screen w-full bg-[#09090b] text-white overflow-hidden relative font-sans items-center justify-center">
-      
+
       {/* Smooth Animated Scrolling Background */}
-      <div 
+      <div
         className="absolute inset-0 z-0 overflow-hidden flex flex-col gap-6 opacity-[0.38] select-none pointer-events-none justify-center items-center"
-        style={{ 
+        style={{
           transform: "rotate(-12deg) scale(1.3) translate3d(0, 0, 0)",
           backfaceVisibility: "hidden"
         }}
       >
         {[...Array(5)].map((_, i) => (
-          <motion.div 
+          <motion.div
             key={i}
             className="flex gap-6 min-w-max will-change-transform"
             style={{ transform: "translate3d(0, 0, 0)", backfaceVisibility: "hidden" }}
@@ -135,10 +135,10 @@ export default function Auth() {
             transition={{ duration: 50 + i * 5, repeat: Infinity, ease: "linear" }}
           >
             {[...POSTERS, ...POSTERS].map((src, j) => (
-              <img 
+              <img
                 key={j}
-                src={src} 
-                alt="Anime Poster" 
+                src={src}
+                alt="Anime Poster"
                 className="w-32 h-48 md:w-48 md:h-72 object-cover rounded-xl shadow-2xl border border-white/5"
                 style={{ transform: "translate3d(0, 0, 0)", backfaceVisibility: "hidden" }}
                 loading="lazy"
@@ -147,17 +147,17 @@ export default function Auth() {
           </motion.div>
         ))}
       </div>
-      
+
       {/* Dynamic Glowing Orbs */}
-      <motion.div 
+      <motion.div
         animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3], x: [0, 50, 0], y: [0, -50, 0] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute w-[600px] h-[600px] bg-fuchsia-600/20 rounded-full blur-[120px] top-[-100px] left-[-100px] pointer-events-none z-0" 
+        className="absolute w-[600px] h-[600px] bg-fuchsia-600/20 rounded-full blur-[120px] top-[-100px] left-[-100px] pointer-events-none z-0"
       />
-      <motion.div 
+      <motion.div
         animate={{ scale: [1, 1.5, 1], opacity: [0.2, 0.4, 0.2], x: [0, -50, 0], y: [0, 50, 0] }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        className="absolute w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[100px] bottom-[-100px] right-[-100px] pointer-events-none z-0" 
+        className="absolute w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[100px] bottom-[-100px] right-[-100px] pointer-events-none z-0"
       />
 
       {/* Dark Vignette Overlay to ensure form readability */}
@@ -173,11 +173,11 @@ export default function Auth() {
         >
           {/* Decorative gradient border line */}
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-fuchsia-500 via-indigo-500 to-blue-500" />
-          
+
           <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500/5 to-indigo-500/5 pointer-events-none" />
 
           <div className="flex flex-col items-center mb-8 relative z-10">
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 15 }}
@@ -187,7 +187,7 @@ export default function Auth() {
                 <Film className="w-7 h-7 text-fuchsia-400 stroke-[1.5]" />
               </div>
             </motion.div>
-            <motion.h1 
+            <motion.h1
               initial={{ y: 10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3 }}
@@ -195,7 +195,7 @@ export default function Auth() {
             >
               Welcome to NEXA
             </motion.h1>
-            <motion.p 
+            <motion.p
               initial={{ y: 10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4 }}
@@ -207,7 +207,7 @@ export default function Auth() {
 
           <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
             {mode === 'signup' && (
-              <motion.div 
+              <motion.div
                 initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.45 }}
@@ -217,8 +217,8 @@ export default function Auth() {
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-500 to-indigo-500 rounded-xl blur opacity-0 group-focus-within:opacity-20 transition-opacity duration-300" />
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-fuchsia-400 transition-colors z-10" />
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="Your name"
@@ -229,7 +229,7 @@ export default function Auth() {
               </motion.div>
             )}
 
-            <motion.div 
+            <motion.div
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.5 }}
@@ -239,8 +239,8 @@ export default function Auth() {
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-500 to-indigo-500 rounded-xl blur opacity-0 group-focus-within:opacity-20 transition-opacity duration-300" />
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-fuchsia-400 transition-colors z-10" />
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
@@ -250,7 +250,7 @@ export default function Auth() {
               </div>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.6 }}
@@ -265,8 +265,8 @@ export default function Auth() {
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-500 to-indigo-500 rounded-xl blur opacity-0 group-focus-within:opacity-20 transition-opacity duration-300" />
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-fuchsia-400 transition-colors z-10" />
-                <input 
-                  type="password" 
+                <input
+                  type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
@@ -276,7 +276,7 @@ export default function Auth() {
               </div>
             </motion.div>
 
-            <motion.button 
+            <motion.button
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.7 }}
@@ -293,7 +293,7 @@ export default function Auth() {
             </motion.button>
           </form>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
@@ -304,13 +304,13 @@ export default function Auth() {
             <div className="h-px bg-white/10 flex-1" />
           </motion.div>
 
-          <motion.div 
+          <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.9 }}
             className="mt-6 relative z-10"
           >
-            <button 
+            <button
               onClick={handleGoogle}
               type="button"
               disabled={submitting}
@@ -338,16 +338,16 @@ export default function Auth() {
               <span className="relative z-10">Google</span>
             </button>
           </motion.div>
-          
-          <motion.p 
+
+          <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1 }}
             className="mt-8 text-center text-xs text-zinc-500 relative z-10"
           >
             {mode === 'signin' ? "Don't have an account? " : "Already have an account? "}
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
               className="font-bold text-fuchsia-400 hover:text-fuchsia-300"
             >
