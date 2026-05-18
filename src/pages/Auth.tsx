@@ -193,7 +193,7 @@ export default function Auth() {
               transition={{ delay: 0.3 }}
               className="text-3xl font-black tracking-tight mb-2 text-transparent bg-clip-text bg-gradient-to-br from-white to-white/70"
             >
-              Welcome to NEXA
+              Welcome to AniTrace
             </motion.h1>
             <motion.p
               initial={{ y: 10, opacity: 0 }}
