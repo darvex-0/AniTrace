@@ -26,6 +26,15 @@ const STATUS_CONFIG = {
   "Plan to Watch": { color: "hsl(240 5% 55%)", activeColor: "hsl(240 5% 75%)" },
 };
 
+// Helper to compute progress percentage for sorting
+const getProgressPercent = (item: MediaItem) => {
+  if (item.type === "Movie") {
+    return item.status === "Completed" ? 100 : 0;
+  }
+  if (!item.total_eps) return 0;
+  return Math.min(100, Math.max(0, (item.current_ep / item.total_eps) * 100));
+};
+
 const Index = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
@@ -37,6 +46,10 @@ const Index = () => {
   const [editing, setEditing] = useState<MediaItem | null>(null);
   const [progressTarget, setProgressTarget] = useState<MediaItem | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<MediaItem | null>(null);
+  
+  // Advanced filters & sorting states
+  const [typeFilter, setTypeFilter] = useState<MediaType | "All">("All");
+  const [sortBy, setSortBy] = useState<"updated_at" | "title" | "rating" | "progress" | "created_at">("updated_at");
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth", { replace: true });
@@ -98,22 +111,68 @@ const Index = () => {
   }, [user]);
 
   const counts = useMemo(() => {
-    const c: Record<string, number> = { All: items.length };
-    MEDIA_STATUSES.forEach((s) => (c[s] = 0));
-    items.forEach((i) => (c[i.status] = (c[i.status] ?? 0) + 1));
-    return c;
-  }, [items]);
-
-  const filtered = useMemo(() => {
-    return items.filter((i) => {
-      const matchesStatus = statusFilter === "All" || i.status === statusFilter;
+    // Dynamic counts: only count items matching the active type filter & search query.
+    const matchingTypeSearch = items.filter((i) => {
+      const matchesType = typeFilter === "All" || i.type === typeFilter;
       const matchesSearch =
         !search.trim() ||
         i.title.toLowerCase().includes(search.toLowerCase()) ||
         (i.source_name?.toLowerCase().includes(search.toLowerCase()));
-      return matchesStatus && matchesSearch;
+      return matchesType && matchesSearch;
     });
-  }, [items, statusFilter, search]);
+
+    const c: Record<string, number> = { All: matchingTypeSearch.length };
+    MEDIA_STATUSES.forEach((s) => (c[s] = 0));
+    matchingTypeSearch.forEach((i) => (c[i.status] = (c[i.status] ?? 0) + 1));
+    return c;
+  }, [items, typeFilter, search]);
+
+  const typeCounts = useMemo(() => {
+    const c: Record<string, number> = { All: items.length, Anime: 0, Series: 0, Movie: 0 };
+    items.forEach((i) => {
+      if (c[i.type] !== undefined) {
+        c[i.type]++;
+      }
+    });
+    return c;
+  }, [items]);
+
+  const filtered = useMemo(() => {
+    // 1. Filter items
+    const result = items.filter((i) => {
+      const matchesStatus = statusFilter === "All" || i.status === statusFilter;
+      const matchesType = typeFilter === "All" || i.type === typeFilter;
+      const matchesSearch =
+        !search.trim() ||
+        i.title.toLowerCase().includes(search.toLowerCase()) ||
+        (i.source_name?.toLowerCase().includes(search.toLowerCase()));
+      return matchesStatus && matchesType && matchesSearch;
+    });
+
+    // 2. Sort items
+    return result.sort((a, b) => {
+      if (sortBy === "title") {
+        return a.title.localeCompare(b.title);
+      }
+      if (sortBy === "rating") {
+        const ratingA = a.rating ?? 0;
+        const ratingB = b.rating ?? 0;
+        return ratingB - ratingA;
+      }
+      if (sortBy === "progress") {
+        return getProgressPercent(b) - getProgressPercent(a);
+      }
+      if (sortBy === "created_at") {
+        const dateA = new Date(a.created_at).getTime();
+        const dateB = new Date(b.created_at).getTime();
+        return dateB - dateA;
+      }
+      // default: updated_at (descending)
+      const dateA = new Date(a.updated_at).getTime();
+      const dateB = new Date(b.updated_at).getTime();
+      return dateB - dateA;
+    });
+  }, [items, statusFilter, typeFilter, search, sortBy]);
 
   const handleSave = async (data: Partial<MediaItem>) => {
     if (!user) return;
@@ -275,24 +334,76 @@ const Index = () => {
       </header>
 
       <div className="px-6 lg:px-8 py-6">
-        {/* Search */}
-        <div className="relative max-w-md mb-5">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search your library..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-muted/30 border border-border/60 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
+        {/* Advanced Controls: Search, Sort and Type Segmented Filters */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+          {/* Search bar & Sort Dropdown for Mobile (flex layout) */}
+          <div className="flex flex-1 items-center gap-3 w-full lg:max-w-md">
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search library..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-muted/20 border border-border/40 text-sm text-foreground placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 hover:bg-muted/40 rounded-full transition-all"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Sort Select */}
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="appearance-none bg-muted/20 border border-border/40 pl-4 pr-9 py-2.5 rounded-xl text-xs font-semibold text-zinc-300 focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer transition-all hover:bg-muted/30"
+                style={{ minWidth: "120px" }}
+              >
+                <option value="updated_at" className="bg-zinc-950 text-zinc-200">Last Updated</option>
+                <option value="title" className="bg-zinc-950 text-zinc-200">Title (A-Z)</option>
+                <option value="rating" className="bg-zinc-950 text-zinc-200">Rating</option>
+                <option value="progress" className="bg-zinc-950 text-zinc-200">Progress %</option>
+                <option value="created_at" className="bg-zinc-950 text-zinc-200">Date Added</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-400">
+                <SlidersHorizontal className="h-3 w-3" />
+              </div>
+            </div>
+          </div>
+
+          {/* Type Segmentation Tabs (Pill Control) */}
+          <div className="flex items-center p-1 rounded-xl bg-muted/20 border border-border/30 w-fit self-start lg:self-auto overflow-hidden">
+            {(["All", "Anime", "Series", "Movie"] as const).map((type) => {
+              const isActive = typeFilter === type;
+              return (
+                <button
+                  key={type}
+                  onClick={() => setTypeFilter(type)}
+                  className={`relative px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
+                    isActive
+                      ? "text-white shadow-sm"
+                      : "text-zinc-500 hover:text-zinc-300"
+                  }`}
+                  style={{
+                    background: isActive ? "var(--gradient-primary)" : "transparent",
+                  }}
+                >
+                  {type === "Movie" ? "Movies" : type === "Series" ? "TV Series" : type}
+                  <span className={`ml-1.5 text-[9px] px-1.5 py-0.2 rounded-full ${
+                    isActive ? "bg-white/20 text-white" : "bg-muted/40 text-zinc-500 font-medium"
+                  }`}>
+                    {typeCounts[type] ?? 0}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Status filter pills */}

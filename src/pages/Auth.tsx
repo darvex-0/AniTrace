@@ -18,16 +18,22 @@ const emailSchema = z.string().trim().email("Invalid email").max(255);
 const passwordSchema = z.string().min(6, "At least 6 characters").max(72);
 
 const POSTERS = [
-  "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx16498-73IhOXpJZiMF.jpg", // AOT
-  "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx11061-sIpBprNRfzCe.png", // HxH
-  "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx113415-bbBWj4pEFseh.jpg", // JJK
-  "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21459-oZMZk2NY1hys.jpg", // MHA
-  "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx21856-wtkIqIypf0Fp.jpg", // Your Name
-  "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx119661-yHkHhGszHnBA.jpg", // Re:Zero
-  "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx108465-BnsFi13SXXoY.jpg", // Mushoku
-  "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1535-ZhzB0yT2h2h8.png", // Death Note
-  "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20605-fmehFUO1B7GZ.jpg", // Tokyo Ghoul
-  "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101922-PEn1CTc93DQl.jpg", // Demon Slayer
+  "/Anime_img/AOT.jpg",
+  "/Anime_img/Bleach.jpg",
+  "/Anime_img/Dark.jpg",
+  "/Anime_img/DeathNote.jpg",
+  "/Anime_img/Demon_slayer.png",
+  "/Anime_img/Dragon_ball.jpg",
+  "/Anime_img/GOT.jpg",
+  "/Anime_img/HxH.jpg",
+  "/Anime_img/JJK.jpg",
+  "/Anime_img/Lost.jpg",
+  "/Anime_img/Money_heist.jpg",
+  "/Anime_img/OPM.jpg",
+  "/Anime_img/One_Piece.jpg",
+  "/Anime_img/Vinlandsaga.jpg",
+  "/Anime_img/breaking_bad.jpg",
+  "/Anime_img/naruto.jpg",
 ];
 
 export default function Auth() {
@@ -113,20 +119,28 @@ export default function Auth() {
     <div className="flex min-h-screen w-full bg-[#09090b] text-white overflow-hidden relative font-sans items-center justify-center">
       
       {/* Smooth Animated Scrolling Background */}
-      <div className="absolute inset-0 z-0 overflow-hidden flex flex-col gap-6 opacity-30 select-none pointer-events-none -rotate-[12deg] scale-[1.3] justify-center items-center">
+      <div 
+        className="absolute inset-0 z-0 overflow-hidden flex flex-col gap-6 opacity-[0.38] select-none pointer-events-none justify-center items-center"
+        style={{ 
+          transform: "rotate(-12deg) scale(1.3) translate3d(0, 0, 0)",
+          backfaceVisibility: "hidden"
+        }}
+      >
         {[...Array(5)].map((_, i) => (
           <motion.div 
             key={i}
             className="flex gap-6 min-w-max will-change-transform"
+            style={{ transform: "translate3d(0, 0, 0)", backfaceVisibility: "hidden" }}
             animate={{ x: i % 2 === 0 ? ["0%", "-50%"] : ["-50%", "0%"] }}
             transition={{ duration: 50 + i * 5, repeat: Infinity, ease: "linear" }}
           >
-            {[...POSTERS, ...POSTERS, ...POSTERS, ...POSTERS].map((src, j) => (
+            {[...POSTERS, ...POSTERS].map((src, j) => (
               <img 
                 key={j}
                 src={src} 
                 alt="Anime Poster" 
                 className="w-32 h-48 md:w-48 md:h-72 object-cover rounded-xl shadow-2xl border border-white/5"
+                style={{ transform: "translate3d(0, 0, 0)", backfaceVisibility: "hidden" }}
                 loading="lazy"
               />
             ))}
@@ -147,8 +161,8 @@ export default function Auth() {
       />
 
       {/* Dark Vignette Overlay to ensure form readability */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#09090b_90%)] z-0 pointer-events-none" />
-      <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px] z-0 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#09090b_95%)] z-0 pointer-events-none" />
+      <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] z-0 pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-md px-6 py-12 h-screen md:h-auto overflow-y-auto hide-scrollbar">
         <motion.div
