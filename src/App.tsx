@@ -5,12 +5,20 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import Index from "./pages/Index.tsx";
-import Auth from "./pages/Auth.tsx";
-import Profile from "./pages/Profile.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import { Layout } from "@/components/Layout";
+import Home from "./pages/Home";
+import Index from "./pages/Index";
+import Discover from "./pages/Discover";
+import Auth from "./pages/Auth";
+import Profile from "./pages/Profile";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+// Authenticated pages get the sidebar + bottom nav layout
+const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => (
+  <Layout>{children}</Layout>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -21,9 +29,42 @@ const App = () => (
         <ErrorBoundary>
           <AuthProvider>
             <Routes>
-              <Route path="/" element={<Index />} />
+              {/* Public */}
               <Route path="/auth" element={<Auth />} />
-              <Route path="/profile" element={<Profile />} />
+
+              {/* Authenticated — with sidebar layout */}
+              <Route
+                path="/"
+                element={
+                  <AuthenticatedLayout>
+                    <Home />
+                  </AuthenticatedLayout>
+                }
+              />
+              <Route
+                path="/library"
+                element={
+                  <AuthenticatedLayout>
+                    <Index />
+                  </AuthenticatedLayout>
+                }
+              />
+              <Route
+                path="/discover"
+                element={
+                  <AuthenticatedLayout>
+                    <Discover />
+                  </AuthenticatedLayout>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <AuthenticatedLayout>
+                    <Profile />
+                  </AuthenticatedLayout>
+                }
+              />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>

@@ -7,8 +7,14 @@ export const MEDIA_STATUSES: MediaStatus[] = ["Watching", "On-Hold", "Completed"
 export interface Spinoff {
   title: string;
   type: MediaType;
+  relation?: "Prequel" | "Sequel" | "Spin-off" | "Related" | null;
   link?: string | null;
   watched?: boolean;
+}
+
+export interface LinkedRelation {
+  id: string;
+  relation: "Prequel" | "Sequel" | "Spin-off" | "Related";
 }
 
 export interface MediaItem {
@@ -29,4 +35,5 @@ export interface MediaItem {
   updated_at: string;
   spinoffs?: Spinoff[] | null;
   linked_spinoff_ids?: string[] | null;
+  linked_relations?: LinkedRelation[] | null;
 }

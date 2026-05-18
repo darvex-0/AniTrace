@@ -34,9 +34,9 @@ export function UserNav({ user, signOut }: UserNavProps) {
     navigate("/auth");
   };
 
-  const initials = user.displayName 
-    ? user.displayName.split(" ").map(n => n[0]).join("").toUpperCase()
-    : user.email?.[0].toUpperCase() || "U";
+  const initials = user.displayName?.trim()
+    ? user.displayName.trim().split(/\s+/).map(n => n[0]).join("").toUpperCase().slice(0, 2)
+    : user.email?.[0]?.toUpperCase() || "U";
 
   return (
     <DropdownMenu>

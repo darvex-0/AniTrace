@@ -1,12 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, Save, User as UserIcon, Camera } from "lucide-react";
+import { ArrowLeft, Loader2, Save, User as UserIcon, Camera, ShieldCheck } from "lucide-react";
 import { updateProfile } from "firebase/auth";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 
@@ -17,16 +13,28 @@ const Profile = () => {
   const [photoURL, setPhotoURL] = useState(user?.photoURL || "");
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth", { replace: true });
+    }
+  }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    if (user) {
+      setDisplayName(user.displayName || "");
+      setPhotoURL(user.photoURL || "");
+    }
+  }, [user]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (!user) {
-    navigate("/auth");
     return null;
   }
 
@@ -36,9 +44,9 @@ const Profile = () => {
     try {
       await updateProfile(user, {
         displayName: displayName.trim(),
-        photoURL: photoURL.trim() || null
+        photoURL: photoURL.trim() || null,
       });
-      toast.success("Profile updated successfully!");
+      toast.success("Profile updated!");
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -46,111 +54,138 @@ const Profile = () => {
     }
   };
 
-  const initials = displayName 
-    ? displayName.split(" ").map(n => n[0]).join("").toUpperCase()
-    : user.email?.[0].toUpperCase() || "U";
+  const initials = displayName
+    ? displayName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    : user.email?.[0]?.toUpperCase() || "U";
 
   return (
-    <div className="min-h-screen p-4 md:p-8" style={{ background: "var(--gradient-hero)" }}>
-      <div className="max-w-2xl mx-auto space-y-6">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate(-1)} 
-          className="gap-2 -ml-2"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back
-        </Button>
+    <div className="min-h-screen relative">
+      <div className="glow-blob-fuchsia" style={{ width: 400, height: 400, top: -100, right: -50, opacity: 0.07 }} />
 
-        <Card className="border-border" style={{ background: "var(--gradient-card)", boxShadow: "var(--shadow-card)" }}>
-          <CardHeader>
-            <div className="flex items-center gap-4">
-              <Avatar className="h-20 w-20 border-2 border-primary/20">
-                <AvatarImage src={photoURL || ""} alt={displayName} />
-                <AvatarFallback className="text-2xl">{initials}</AvatarFallback>
-              </Avatar>
-              <div className="space-y-1">
-                <CardTitle className="text-2xl">Profile Details</CardTitle>
-                <CardDescription>Manage your personal information and how others see you.</CardDescription>
+      {/* Header */}
+      <header className="sticky top-0 z-10 border-b border-border/40 glass-panel-heavy">
+        <div className="px-6 lg:px-8 py-4 flex items-center gap-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 rounded-xl glass-panel border border-border/40 text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <h1 className="text-xl font-bold">Profile</h1>
+        </div>
+      </header>
+
+      <div className="max-w-xl mx-auto px-6 py-8 space-y-6">
+        {/* Avatar card */}
+        <div className="glass-card rounded-2xl p-6 border border-border/40 flex items-center gap-5">
+          <Avatar className="h-20 w-20 border-2 border-primary/30 shadow-lg">
+            <AvatarImage src={photoURL || ""} alt={displayName} />
+            <AvatarFallback
+              className="text-2xl font-black"
+              style={{ background: "var(--gradient-primary)", color: "white" }}
+            >
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h2 className="text-xl font-bold">{displayName || "Anime Fan"}</h2>
+            <p className="text-sm text-muted-foreground">{user.email}</p>
+            <p className="text-xs text-primary mt-1">Member since {new Date(user.metadata.creationTime || "").getFullYear()}</p>
+          </div>
+        </div>
+
+        {/* Edit form */}
+        <div className="glass-card rounded-2xl border border-border/40 overflow-hidden">
+          <div className="px-6 py-4 border-b border-border/30">
+            <h3 className="font-semibold text-sm">Edit Profile</h3>
+          </div>
+          <form onSubmit={handleUpdate} className="px-6 py-5 space-y-5">
+            {/* Email (read-only) */}
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={user.email || ""}
+                disabled
+                className="w-full px-4 py-3 rounded-xl bg-muted/20 border border-border/40 text-sm text-muted-foreground cursor-not-allowed"
+              />
+              <p className="text-[10px] text-muted-foreground">Email cannot be changed.</p>
+            </div>
+
+            {/* Display Name */}
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Display Name
+              </label>
+              <div className="relative">
+                <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Your name"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-muted/30 border border-border/60 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all"
+                  required
+                />
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleUpdate} className="space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input 
-                    id="email" 
-                    value={user.email || ""} 
-                    disabled 
-                    className="bg-muted/50 cursor-not-allowed"
-                  />
-                  <p className="text-[10px] text-muted-foreground">Email cannot be changed.</p>
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="name">Display Name</Label>
-                  <div className="relative">
-                    <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      id="name" 
-                      value={displayName} 
-                      onChange={(e) => setDisplayName(e.target.value)}
-                      placeholder="Enter your name"
-                      className="pl-9"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="photo">Avatar URL</Label>
-                  <div className="relative">
-                    <Camera className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      id="photo" 
-                      value={photoURL} 
-                      onChange={(e) => setPhotoURL(e.target.value)}
-                      placeholder="https://example.com/avatar.jpg"
-                      className="pl-9"
-                    />
-                  </div>
-                  <p className="text-[10px] text-muted-foreground">Provide a URL for your profile picture.</p>
-                </div>
+            {/* Avatar URL */}
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Avatar URL
+              </label>
+              <div className="relative">
+                <Camera className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="url"
+                  value={photoURL}
+                  onChange={(e) => setPhotoURL(e.target.value)}
+                  placeholder="https://example.com/avatar.jpg"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-muted/30 border border-border/60 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all"
+                />
               </div>
+            </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  onClick={() => navigate(-1)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={submitting} className="gap-2">
-                  {submitting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4" />
-                  )}
-                  Save Changes
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="px-5 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 border border-border/40 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 glow-fuchsia"
+                style={{ background: "var(--gradient-primary)" }}
+              >
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
 
-        <Card className="border-border border-destructive/20" style={{ background: "rgba(239, 68, 68, 0.02)" }}>
-          <CardHeader>
-            <CardTitle className="text-lg text-destructive">Account Security</CardTitle>
-            <CardDescription>Sensitive account actions and security settings.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive">
+        {/* Security card */}
+        <div className="glass-card rounded-2xl border border-destructive/15 overflow-hidden">
+          <div className="px-6 py-4 border-b border-border/30 flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-destructive" />
+            <h3 className="font-semibold text-sm text-destructive">Account Security</h3>
+          </div>
+          <div className="px-6 py-5">
+            <button className="w-full text-left px-4 py-3 rounded-xl text-sm text-destructive/80 hover:bg-destructive/10 hover:text-destructive border border-destructive/20 transition-all">
               Reset Password
-            </Button>
-          </CardContent>
-        </Card>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

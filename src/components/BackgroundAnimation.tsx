@@ -1,101 +1,150 @@
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState, useRef } from "react";
+import { getTrending, IMG_BASE, getDisplayTitle, type TMDBMedia } from "@/lib/tmdb";
 
-const BackgroundAnimation = () => {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+// Curated fallback titles for when TMDB is loading
+const FALLBACK_POSTERS = [
+  { title: "Attack on Titan", color: "#1a0a00", accent: "#c0392b" },
+  { title: "Demon Slayer", color: "#0a0015", accent: "#8e44ad" },
+  { title: "One Piece", color: "#001a10", accent: "#27ae60" },
+  { title: "Jujutsu Kaisen", color: "#000d1a", accent: "#2980b9" },
+  { title: "Naruto", color: "#1a0f00", accent: "#e67e22" },
+  { title: "Dragon Ball Z", color: "#1a1200", accent: "#f39c12" },
+  { title: "Bleach", color: "#00101a", accent: "#16a085" },
+  { title: "Death Note", color: "#080808", accent: "#e74c3c" },
+  { title: "Fullmetal Alchemist", color: "#0f0800", accent: "#d35400" },
+  { title: "Hunter x Hunter", color: "#001500", accent: "#229954" },
+  { title: "My Hero Academia", color: "#00001a", accent: "#1abc9c" },
+  { title: "Violet Evergarden", color: "#000a1a", accent: "#5dade2" },
+  { title: "Chainsaw Man", color: "#1a0000", accent: "#e74c3c" },
+  { title: "Spy x Family", color: "#001a08", accent: "#58d68d" },
+  { title: "Vinland Saga", color: "#0a0f00", accent: "#a9cce3" },
+  { title: "Frieren", color: "#080010", accent: "#bb8fce" },
+];
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({
-        x: (e.clientX / window.innerWidth) * 2 - 1,
-        y: (e.clientY / window.innerHeight) * 2 - 1,
-      });
-    };
+interface PosterCardProps {
+  poster: TMDBMedia | null;
+  fallback: (typeof FALLBACK_POSTERS)[0];
+}
 
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
+const PosterCard = ({ poster, fallback }: PosterCardProps) => {
+  if (poster?.poster_path) {
+    return (
+      <div className="w-36 h-52 rounded-xl overflow-hidden shrink-0 shadow-lg">
+        <img
+          src={`${IMG_BASE}${poster.poster_path}`}
+          alt={getDisplayTitle(poster)}
+          className="w-full h-full object-cover"
+          loading="lazy"
+        />
+      </div>
+    );
+  }
+  return (
+    <div
+      className="w-36 h-52 rounded-xl shrink-0 shadow-lg flex items-end p-3 overflow-hidden"
+      style={{
+        background: `linear-gradient(160deg, ${fallback.color} 0%, ${fallback.accent}22 100%)`,
+        border: `1px solid ${fallback.accent}33`,
+      }}
+    >
+      <span className="text-xs font-semibold text-white/70 line-clamp-2 leading-tight">
+        {fallback.title}
+      </span>
+    </div>
+  );
+};
+
+interface ColumnProps {
+  posters: (TMDBMedia | null)[];
+  fallbacks: (typeof FALLBACK_POSTERS)[0][];
+  direction: "up" | "down" | "up-slow" | "up-fast";
+}
+
+const PosterColumn = ({ posters, fallbacks, direction }: ColumnProps) => {
+  // Duplicate for seamless loop
+  const items = [...posters, ...posters];
+  const fallbacksDoubled = [...fallbacks, ...fallbacks];
+
+  const animClass =
+    direction === "up"
+      ? "animate-scroll-up"
+      : direction === "down"
+      ? "animate-scroll-down"
+      : direction === "up-slow"
+      ? "animate-scroll-up-slow"
+      : "animate-scroll-up-fast";
 
   return (
-    <div className="fixed inset-0 z-0 overflow-hidden bg-background">
-      {/* Anime Energy Pattern */}
-      <motion.img 
-        src="/anime_energy.png" 
-        alt="Anime Energy"
-        className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-screen"
-        animate={{
-          scale: [1, 1.05, 1],
-          opacity: [0.2, 0.4, 0.2]
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
+    <div className="flex flex-col gap-3 overflow-hidden h-full">
+      <div className={`flex flex-col gap-3 ${animClass}`}>
+        {items.map((poster, i) => (
+          <PosterCard
+            key={i}
+            poster={poster}
+            fallback={fallbacksDoubled[i % fallbacksDoubled.length]}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
 
-      {/* Dynamic Gradient Background */}
-      <div 
-        className="absolute inset-0 opacity-40 mix-blend-color-burn"
+const BackgroundAnimation = () => {
+  const [posters, setPosters] = useState<TMDBMedia[]>([]);
+
+  useEffect(() => {
+    getTrending("tv", "week")
+      .then((r) => setPosters(r.results.slice(0, 16)))
+      .catch(() => {});
+  }, []);
+
+  // Split posters into 4 columns
+  const col1 = posters.slice(0, 4);
+  const col2 = posters.slice(4, 8);
+  const col3 = posters.slice(8, 12);
+  const col4 = posters.slice(12, 16);
+
+  const fb1 = FALLBACK_POSTERS.slice(0, 4);
+  const fb2 = FALLBACK_POSTERS.slice(4, 8);
+  const fb3 = FALLBACK_POSTERS.slice(8, 12);
+  const fb4 = FALLBACK_POSTERS.slice(12, 16);
+
+  return (
+    <div className="fixed inset-0 z-0 overflow-hidden bg-[#09090b]">
+      {/* Poster columns — angled container */}
+      <div
+        className="absolute inset-0 flex gap-4 items-start justify-center opacity-35"
         style={{
-          background: "radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.2) 0%, transparent 70%)",
-          transform: `translate(${mousePosition.x * 20}px, ${mousePosition.y * 20}px)`,
-          transition: "transform 0.1s ease-out",
-        }}
-      />
-
-      {/* Anime Speed Lines Effect */}
-      <div className="absolute inset-0 anime-speed-lines opacity-20" />
-
-      {/* Anime Silhouette Parallax Layer */}
-      <motion.div 
-        className="absolute inset-0 flex items-center justify-center opacity-15 pointer-events-none mix-blend-screen"
-        style={{
-          transform: `translate(${mousePosition.x * -40}px, ${mousePosition.y * -40}px)`,
-          transition: "transform 0.1s ease-out",
+          transform: "rotate(-8deg) scale(1.2)",
+          transformOrigin: "center center",
+          height: "130%",
+          top: "-15%",
+          left: "-5%",
+          width: "110%",
         }}
       >
-        <img src="/anime_silhouette.png" alt="Anime Silhouette" className="h-[120%] w-auto max-w-none object-contain" />
-      </motion.div>
+        <PosterColumn posters={col1} fallbacks={fb1} direction="up" />
+        <PosterColumn posters={col2} fallbacks={fb2} direction="down" />
+        <PosterColumn posters={col3} fallbacks={fb3} direction="up-slow" />
+        <PosterColumn posters={col4} fallbacks={fb4} direction="up-fast" />
+        {/* Extra column on wide screens */}
+        <PosterColumn posters={col1} fallbacks={fb1} direction="down" />
+      </div>
 
-      {/* Floating Shards */}
-      {Array.from({ length: 15 }).map((_, i) => {
-        const size = Math.random() * 100 + 50;
-        const initialX = Math.random() * 100;
-        const initialY = Math.random() * 100;
-        const duration = Math.random() * 20 + 10;
-        const delay = Math.random() * 5;
+      {/* Dark gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#09090b]/60 via-[#09090b]/70 to-[#09090b]/85" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#09090b]/80 via-transparent to-[#09090b]/80" />
 
-        return (
-          <motion.div
-            key={i}
-            className="absolute rounded-lg opacity-30 shard-blur"
-            style={{
-              width: size,
-              height: size,
-              background: i % 2 === 0 ? "hsl(var(--primary))" : "hsl(var(--primary-glow))",
-              filter: "blur(40px)",
-              left: `${initialX}%`,
-              top: `${initialY}%`,
-            }}
-            animate={{
-              y: [0, -100, 0],
-              x: [0, Math.random() * 50 - 25, 0],
-              scale: [1, 1.2, 1],
-              opacity: [0.2, 0.5, 0.2],
-            }}
-            transition={{
-              duration: duration,
-              repeat: Infinity,
-              delay: delay,
-              ease: "easeInOut",
-            }}
-          />
-        );
-      })}
-
-      {/* Overlay to ensure text readability */}
-      <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px]" />
+      {/* Fuchsia glow blob */}
+      <div
+        className="glow-blob-fuchsia"
+        style={{ width: 500, height: 500, top: "20%", left: "20%", opacity: 0.5 }}
+      />
+      {/* Indigo glow blob */}
+      <div
+        className="glow-blob-indigo"
+        style={{ width: 400, height: 400, bottom: "15%", right: "15%", opacity: 0.4 }}
+      />
     </div>
   );
 };

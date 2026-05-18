@@ -67,9 +67,9 @@ export const ProgressDialog = ({ open, onOpenChange, item, onSave }: Props) => {
   if (!item || !schema) return null;
   const isMovie = item.type === "Movie";
 
-  const isComplete = !!maxSeason && !!totalEpsForSeason && season === maxSeason && episode === totalEpsForSeason;
+  const isComplete = isMovie ? episode === 1 : (!!maxSeason && !!totalEpsForSeason && season === maxSeason && episode === totalEpsForSeason);
   const resumeText = isMovie
-    ? `Ep ${episode}`
+    ? (episode === 1 ? "Completed" : "Not Finished")
     : `S${season} · Ep ${episode}`;
 
   const resumePreviewClass = epError
@@ -98,16 +98,19 @@ export const ProgressDialog = ({ open, onOpenChange, item, onSave }: Props) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const epValidation = validateEpisode(episode, season);
-    if (epValidation) {
-      setEpError(epValidation);
-      toast.error(epValidation);
-      return;
+    // Skip validation for Movies
+    if (!isMovie) {
+      const epValidation = validateEpisode(episode, season);
+      if (epValidation) {
+        setEpError(epValidation);
+        toast.error(epValidation);
+        return;
+      }
     }
 
     const parsed = schema.safeParse({
-      current_season: season,
-      current_ep: episode,
+      current_season: isMovie ? 1 : season,
+      current_ep: isMovie ? episode : episode,
       notes: notes.trim() ? notes.trim() : null,
     });
     if (!parsed.success) {
@@ -134,7 +137,7 @@ export const ProgressDialog = ({ open, onOpenChange, item, onSave }: Props) => {
         <div className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${resumePreviewClass}`}>
           <Play className="h-3.5 w-3.5" />
           <span>
-            {isComplete ? "Completed" : `Resume from ${resumeText}`}
+            {isComplete ? "Completed 🎉" : `Resume from ${resumeText}`}
           </span>
         </div>
 
@@ -209,16 +212,23 @@ export const ProgressDialog = ({ open, onOpenChange, item, onSave }: Props) => {
             </div>
           )}
           {isMovie && (
-            <div className="space-y-2">
-              <Label htmlFor="pd-e">Progress</Label>
-              <Input
-                id="pd-e"
-                type="number"
-                min={0}
-                value={episode}
-                onChange={(e) => setEpisode(Math.max(0, parseInt(e.target.value) || 0))}
-                autoFocus
-              />
+            <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/20">
+              <div className="space-y-0.5">
+                <Label className="text-sm font-semibold">Watch Status</Label>
+                <p className="text-xs text-muted-foreground">Mark this movie as finished</p>
+              </div>
+              <Button
+                type="button"
+                variant={episode === 1 ? "default" : "outline"}
+                onClick={() => setEpisode(episode === 1 ? 0 : 1)}
+                className={`transition-all duration-300 font-bold ${
+                  episode === 1 
+                    ? "bg-green-600 hover:bg-green-700 text-white border-green-600 shadow-[0_0_12px_rgba(22,163,74,0.3)]" 
+                    : ""
+                }`}
+              >
+                {episode === 1 ? "Completed 🎉" : "Not Watched"}
+              </Button>
             </div>
           )}
 
