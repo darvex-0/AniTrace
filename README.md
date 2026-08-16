@@ -77,7 +77,11 @@ VITE_GEMINI_API_KEY=your_gemini_api_key
 
 > [!IMPORTANT]
 > - **TMDB API Key:** Required for basic search and metadata queries. Grab a free API key from your [TMDB account settings](https://www.themoviedb.org/documentation/api).
-> - **Gemini API Key:** Unlocks AI autocomplete, smart episode/season count estimation, and franchise timeline mapping. Get a key from the [Google AI Studio](https://aistudio.google.com/). You can either set it here as a permanent environment variable or add it on-the-fly inside the app's **Profile Page Settings** (saved to local storage).
+> - **Gemini API Key:** Unlocks AI autocomplete, smart episode/season count estimation, and franchise timeline mapping. Get a key from the [Google AI Studio](https://aistudio.google.com/).
+>
+> **How to configure the Gemini API Key:**
+> - **Option 1: Directly in the Web App UI (Recommended):** You can enter your Gemini API Key directly inside the app by going to the **Profile** page and scrolling to **AI Autocomplete Settings**. This saves the key securely inside your browser's local storage (no environment variable setup needed!).
+> - **Option 2: Via Local Environment:** You can paste your key in the `.env` file as `VITE_GEMINI_API_KEY` to load it permanently for local development.
 
 ### 4. Setup Firebase (Optional)
 This project uses Firebase. You can replace the default firebase config in `src/lib/firebase.ts` with your own project credentials.
