@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./public/screenshot.png" alt="AniTrace Dashboard Screenshot" width="100%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.3);" />
+  <img src="./public/screenshot.jpg" alt="AniTrace Dashboard Screenshot" width="100%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.3);" />
   
   <br />
   <br />
@@ -72,11 +72,12 @@ cp .env.example .env
 Open `.env` and fill in your keys:
 ```env
 VITE_TMDB_API_KEY=your_tmdb_api_key
+VITE_GEMINI_API_KEY=your_gemini_api_key
 ```
 
-> [!NOTE]
-> You can acquire a free TMDB API key from your [TMDB account settings](https://www.themoviedb.org/documentation/api).
-> You can also supply a `VITE_GEMINI_API_KEY` here, or paste it directly in the app's **Profile page settings** to load it on-the-fly.
+> [!IMPORTANT]
+> - **TMDB API Key:** Required for basic search and metadata queries. Grab a free API key from your [TMDB account settings](https://www.themoviedb.org/documentation/api).
+> - **Gemini API Key:** Unlocks AI autocomplete, smart episode/season count estimation, and franchise timeline mapping. Get a key from the [Google AI Studio](https://aistudio.google.com/). You can either set it here as a permanent environment variable or add it on-the-fly inside the app's **Profile Page Settings** (saved to local storage).
 
 ### 4. Setup Firebase (Optional)
 This project uses Firebase. You can replace the default firebase config in `src/lib/firebase.ts` with your own project credentials.
