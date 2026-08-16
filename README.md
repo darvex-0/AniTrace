@@ -31,7 +31,7 @@ AniTrace integrates the **TMDB API** for rich metadata and **Gemini 2.5 Flash** 
 
 ## ✨ Features
 
-- 🌌 **Gorgeous Glassmorphic Dashboard:** Dark mode by default, vibrant gradients, and fluid micro-animations (powered by Framer Motion).
+- 🌌 **Modern Dark-Mode Dashboard:** Clean interface, vibrant gradients, and fluid animations (powered by Framer Motion) that look great on any screen.
 - 🧠 **AI Autocomplete & Estimation (Optional):** Enter a partial title, and let Gemini estimate total seasons, episodes, and generate a brief clean synopsis.
 - 🔗 **Smart Franchise Mapping:** Instantly discovers prequel/sequel relations and lets you connect them to your watchlist.
 - ⚡ **Realtime Cloud Sync:** Powered by Firebase Authentication and Firestore to save your list instantly across all devices.
