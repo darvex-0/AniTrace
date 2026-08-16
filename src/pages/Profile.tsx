@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, Save, User as UserIcon, Camera, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Loader2, Save, User as UserIcon, Camera, ShieldCheck, Sparkles } from "lucide-react";
 import { updateProfile } from "firebase/auth";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,6 +12,29 @@ const Profile = () => {
   const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [photoURL, setPhotoURL] = useState(user?.photoURL || "");
   const [submitting, setSubmitting] = useState(false);
+
+  // Gemini API Key state
+  const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem("gemini_api_key") || "");
+  const [savingKey, setSavingKey] = useState(false);
+
+  const handleSaveKey = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingKey(true);
+    try {
+      const trimmed = geminiKey.trim();
+      if (trimmed) {
+        localStorage.setItem("gemini_api_key", trimmed);
+        toast.success("Gemini API key saved! AI suggestions enabled. ✨");
+      } else {
+        localStorage.removeItem("gemini_api_key");
+        toast.success("Gemini API key cleared. Using TMDB fallback.");
+      }
+    } catch {
+      toast.error("Failed to save API key");
+    } finally {
+      setSavingKey(false);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -170,6 +193,55 @@ const Profile = () => {
                 )}
                 Save Changes
               </button>
+            </div>
+          </form>
+        </div>
+
+        {/* AI Settings card */}
+        <div className="glass-card rounded-2xl border border-border/40 overflow-hidden">
+          <div className="px-6 py-4 border-b border-border/30 flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+            <h3 className="font-semibold text-sm">AI Autocomplete Settings</h3>
+          </div>
+          <form onSubmit={handleSaveKey} className="px-6 py-5 space-y-4">
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Gemini API Key
+              </label>
+              <input
+                type="password"
+                value={geminiKey}
+                onChange={(e) => setGeminiKey(e.target.value)}
+                placeholder="AIzaSy..."
+                className="w-full px-4 py-3 rounded-xl bg-muted/30 border border-border/60 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all"
+              />
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                Add your Gemini API Key to enable rich auto-suggestions that automatically estimate total seasons, episodes, and notes for you. If empty, the app falls back to basic TMDB searches.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                disabled={savingKey}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white transition-all hover:opacity-90 glow-fuchsia"
+                style={{ background: "var(--gradient-primary)" }}
+              >
+                <Save className="h-3.5 w-3.5" />
+                Save Key
+              </button>
+              {geminiKey && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.removeItem("gemini_api_key");
+                    setGeminiKey("");
+                    toast.success("Gemini API key cleared.");
+                  }}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all"
+                >
+                  Clear Key
+                </button>
+              )}
             </div>
           </form>
         </div>

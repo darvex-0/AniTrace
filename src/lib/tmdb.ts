@@ -114,3 +114,11 @@ export const getNowPlayingMovies = () =>
 // Search (all)
 export const searchTMDB = (query: string) =>
   tmdbFetch<TMDBResponse>("/search/multi", { query, include_adult: "false" });
+
+// Get Details for a specific Movie or TV show
+export const getTMDBDetails = (type: "movie" | "tv", id: number) =>
+  tmdbFetch<any>(`/${type}/${id}`);
+
+// Get Recommendations for a specific Movie or TV show
+export const getTMDBRecommendations = (type: "movie" | "tv", id: number) =>
+  tmdbFetch<TMDBResponse>(`/${type}/${id}/recommendations`);
