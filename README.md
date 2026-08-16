@@ -1,4 +1,9 @@
 <div align="center">
+  <img src="./public/screenshot.png" alt="AniTrace Dashboard Screenshot" width="100%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.3);" />
+  
+  <br />
+  <br />
+  
   <img src="./public/favicon.png" width="80" height="80" alt="AniTrace Logo" />
   
   # AniTrace
@@ -33,15 +38,7 @@ AniTrace integrates the **TMDB API** for rich metadata and **Gemini 2.5 Flash** 
 - 📱 **Fully Responsive:** Feels like a native app on mobile, tablet, or desktop.
 - 🚫 **Ad-free & Tracker-free:** Just your watch list, your way.
 
----
 
-## 📸 Showcase
-
-<div align="center">
-  <img src="./public/screenshot.png" alt="AniTrace Dashboard Screenshot" width="100%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.3);" />
-</div>
-
----
 
 ## 🛠️ Tech Stack
 
