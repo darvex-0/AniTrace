@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, ExternalLink, Pencil, Trash2, Clock, Film, Tv2, Sparkles, CheckCircle2, Calendar } from "lucide-react";
+import { Plus, ExternalLink, Pencil, Trash2, Clock, Film, Tv2, Sparkles, CheckCircle2, Calendar, GitBranch } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { MediaItem } from "@/lib/types";
 import { SpinoffsSection } from "./SpinoffsSection";
@@ -11,6 +11,7 @@ interface Props {
   onEdit: (item: MediaItem) => void;
   onEditProgress: (item: MediaItem) => void;
   onDelete: (item: MediaItem) => void;
+  onOpenFranchise?: (item: MediaItem) => void;
 }
 
 const TypeIcon = ({ type }: { type: string }) => {
@@ -52,7 +53,7 @@ const statusCls = (s: string) => {
 };
 
 export const MediaCard = ({
-  item, allItems = [], onIncrement, onEdit, onEditProgress, onDelete,
+  item, allItems = [], onIncrement, onEdit, onEditProgress, onDelete, onOpenFranchise,
 }: Props) => {
   const [bumping, setBumping] = useState(false);
 
@@ -159,15 +160,26 @@ export const MediaCard = ({
 
         {/* Hover action buttons */}
         <div className="absolute top-2.5 right-2.5 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0 z-20">
+          {onOpenFranchise && (
+            <button
+              onClick={() => onOpenFranchise(item)}
+              title="Explore Franchise & Connected Works"
+              className="p-1.5 rounded-lg bg-primary/25 hover:bg-primary text-white border border-primary/40 transition-all backdrop-blur-sm shadow-sm"
+            >
+              <GitBranch className="h-3 w-3" />
+            </button>
+          )}
           <button
             onClick={() => onEdit(item)}
             className="p-1.5 rounded-lg bg-white/10 hover:bg-white/25 text-white/70 hover:text-white border border-white/10 transition-all backdrop-blur-sm"
+            title="Edit details"
           >
             <Pencil className="h-3 w-3" />
           </button>
           <button
             onClick={() => onDelete(item)}
             className="p-1.5 rounded-lg bg-red-500/15 hover:bg-red-500/30 text-red-400 border border-red-500/20 transition-all backdrop-blur-sm"
+            title="Delete title"
           >
             <Trash2 className="h-3 w-3" />
           </button>

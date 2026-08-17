@@ -94,11 +94,16 @@ Open [http://localhost:5173](http://localhost:5173) in your browser!
 
 ---
 
-## 🧪 Running Tests
-We use Vitest for lightning-fast testing:
-```bash
-npm run test
-```
+## 🧪 Testing & Quality Assurance
+
+This repository follows a strict testing strategy covering Unit, Integration, API, Database, and UI/UX testing. 
+
+* **Complete Test Cases & Scenarios:** Refer to the detailed [QA Test Plan](file:///c:/Users/Rakesh/Vs%20code/AniTrace/AniTrace/QA_TEST_PLAN.md) for step-by-step validation procedures.
+* **Running Tests:** We use Vitest for lightning-fast test execution. Run them locally via:
+  ```bash
+  npm run test
+  ```
+
 
 ---
 

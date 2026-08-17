@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { MediaCard } from "@/components/MediaCard";
 import { MediaDialog } from "@/components/MediaDialog";
 import { ProgressDialog } from "@/components/ProgressDialog";
+import { FranchiseDialog } from "@/components/FranchiseDialog";
 import { UserNav } from "@/components/UserNav";
 import { MEDIA_STATUSES, type MediaItem, type MediaType } from "@/lib/types";
 
@@ -44,6 +45,8 @@ const Index = () => {
   const [statusFilter, setStatusFilter] = useState<string>("Watching");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<MediaItem | null>(null);
+  const [prefillItem, setPrefillItem] = useState<Partial<MediaItem> | null>(null);
+  const [franchiseTarget, setFranchiseTarget] = useState<MediaItem | null>(null);
   const [progressTarget, setProgressTarget] = useState<MediaItem | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<MediaItem | null>(null);
   
@@ -484,9 +487,10 @@ const Index = () => {
                   item={item}
                   allItems={items}
                   onIncrement={handleIncrement}
-                  onEdit={(i) => { setEditing(i); setDialogOpen(true); }}
+                  onEdit={(i) => { setEditing(i); setPrefillItem(null); setDialogOpen(true); }}
                   onEditProgress={(i) => setProgressTarget(i)}
                   onDelete={(i) => setDeleteTarget(i)}
+                  onOpenFranchise={(i) => setFranchiseTarget(i)}
                 />
               ))}
             </div>
@@ -497,10 +501,28 @@ const Index = () => {
       {/* Dialogs */}
       <MediaDialog
         open={dialogOpen}
-        onOpenChange={(o) => { setDialogOpen(o); if (!o) setEditing(null); }}
+        onOpenChange={(o) => {
+          setDialogOpen(o);
+          if (!o) {
+            setEditing(null);
+            setPrefillItem(null);
+          }
+        }}
         item={editing}
+        initialValues={prefillItem}
         allItems={items}
         onSave={handleSave}
+      />
+      <FranchiseDialog
+        open={!!franchiseTarget}
+        onOpenChange={(o) => !o && setFranchiseTarget(null)}
+        parentItem={franchiseTarget}
+        libraryItems={items}
+        onAddFranchiseItem={(prefill) => {
+          setEditing(null);
+          setPrefillItem(prefill);
+          setDialogOpen(true);
+        }}
       />
       <ProgressDialog
         open={!!progressTarget}

@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { MEDIA_STATUSES, MEDIA_TYPES, type MediaItem, type MediaStatus, type MediaType, type Spinoff, type LinkedRelation } from "@/lib/types";
-import { fetchAISuggestions, fetchFranchiseTimeline, fetchTMDBRecommendations, type AISuggestion } from "@/lib/gemini";
+import { fetchAISuggestions, type AISuggestion } from "@/lib/gemini";
 import { getTMDBDetails, searchTMDB } from "@/lib/tmdb";
 
 const schema = z.object({
@@ -32,6 +32,7 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   item: MediaItem | null;
+  initialValues?: Partial<MediaItem> | null;
   allItems?: MediaItem[];
   onSave: (data: Partial<MediaItem>) => Promise<void>;
 }
@@ -42,7 +43,7 @@ const typeIcon = (t: string) => {
   return <Tv2 className="h-3 w-3" />;
 };
 
-export const MediaDialog = ({ open, onOpenChange, item, allItems = [], onSave }: Props) => {
+export const MediaDialog = ({ open, onOpenChange, item, initialValues, allItems = [], onSave }: Props) => {
   const [title, setTitle] = useState("");
   const [type, setType] = useState<MediaType>("Series");
   const [status, setStatus] = useState<MediaStatus>("Watching");
@@ -68,8 +69,6 @@ export const MediaDialog = ({ open, onOpenChange, item, allItems = [], onSave }:
   const [keyInputValue, setKeyInputValue] = useState("");
   const [activeSuggestionIdx, setActiveSuggestionIdx] = useState(-1);
   const [tmdbSeasons, setTmdbSeasons] = useState<any[]>([]);
-  const [suggestedConnections, setSuggestedConnections] = useState<Spinoff[]>([]);
-  const [loadingConnections, setLoadingConnections] = useState(false);
 
   // Debounced API Suggestions Fetch
   useEffect(() => {
@@ -98,29 +97,17 @@ export const MediaDialog = ({ open, onOpenChange, item, allItems = [], onSave }:
       } finally {
         setSuggestionsLoading(false);
       }
-    }, 450);
+    }, 350);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [title, type, geminiKey, open]);
-
-  // Click outside to close dropdown
-  useEffect(() => {
-    const handleOutsideClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest("#title-container")) {
-        setShowSuggestions(false);
-      }
-    };
-    document.addEventListener("mousedown", handleOutsideClick);
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, []);
+  }, [title, type, open, geminiKey]);
 
   const handleSelectSuggestion = async (s: AISuggestion) => {
     setTitle(s.title);
     if (s.type) setType(s.type);
-    if (s.total_eps !== undefined) setTotalEps(s.total_eps !== null ? String(s.total_eps) : "");
-    if (s.total_seasons !== undefined) setTotalSeasons(s.total_seasons !== null ? String(s.total_seasons) : "");
-    if (s.notes) setNotes(s.notes);
+    if (s.total_eps !== undefined && s.total_eps !== null) setTotalEps(String(s.total_eps));
+    if (s.total_seasons !== undefined && s.total_seasons !== null) setTotalSeasons(String(s.total_seasons));
+    if (s.notes && !notes) setNotes(s.notes);
     setShowSuggestions(false);
 
     let tmdbId = s.tmdbId;
@@ -148,29 +135,11 @@ export const MediaDialog = ({ open, onOpenChange, item, allItems = [], onSave }:
       }
     }
 
-    // Fetch franchise / similar connections in background
-    setLoadingConnections(true);
-    setSuggestedConnections([]);
-    try {
-      if (geminiKey) {
-        const conns = await fetchFranchiseTimeline(s.title, geminiKey);
-        setSuggestedConnections(conns.filter(c => !spinoffs.some(existing => existing.title.toLowerCase() === c.title.toLowerCase())));
-      } else if (tmdbId && tmdbType) {
-        const conns = await fetchTMDBRecommendations(tmdbType, tmdbId);
-        setSuggestedConnections(conns.filter(c => !spinoffs.some(existing => existing.title.toLowerCase() === c.title.toLowerCase())));
-      }
-    } catch (err) {
-      console.warn("Failed to load suggested connections:", err);
-    } finally {
-      setLoadingConnections(false);
-    }
-
     if (tmdbId && tmdbType) {
       const toastId = toast.loading("Verifying detailed season/episode counts from TMDB...");
       try {
         const details = await getTMDBDetails(tmdbType, tmdbId);
         if (tmdbType === "tv") {
-          // Parse target season number from title (e.g. "season 2" or "s2")
           let targetSeason = Number(currentSeason) || 1;
           const titleMatch = s.title.match(/(?:season|s)\s*(\d+)/i);
           if (titleMatch) {
@@ -210,12 +179,6 @@ export const MediaDialog = ({ open, onOpenChange, item, allItems = [], onSave }:
     }
   };
 
-  const addSuggestedConnection = (conn: Spinoff) => {
-    setSpinoffs((prev) => [...prev, conn]);
-    setSuggestedConnections((prev) => prev.filter((c) => c.title !== conn.title));
-    toast.success(`Connected "${conn.title}"! ✨`);
-  };
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!showSuggestions || suggestions.length === 0) return;
 
@@ -237,26 +200,25 @@ export const MediaDialog = ({ open, onOpenChange, item, allItems = [], onSave }:
 
   useEffect(() => {
     if (open) {
-      setTitle(item?.title ?? "");
-      setType((item?.type as MediaType) ?? "Series");
-      setStatus((item?.status as MediaStatus) ?? "Watching");
-      setCurrentEp(String(item?.current_ep ?? 0));
-      setTotalEps(item?.total_eps ? String(item.total_eps) : "");
-      setCurrentSeason(String(item?.current_season ?? 1));
-      setTotalSeasons(item?.total_seasons ? String(item.total_seasons) : "");
-      setSourceName(item?.source_name ?? "");
-      setSourceLink(item?.source_link ?? "");
-      setNotes(item?.notes ?? "");
-      setLinkedIds(item?.linked_spinoff_ids ?? []);
-      setLinkedRelations(item?.linked_relations ?? []);
-      setSpinoffs((item?.spinoffs ?? []) as Spinoff[]);
+      const source = item || initialValues;
+      setTitle(source?.title ?? "");
+      setType((source?.type as MediaType) ?? "Series");
+      setStatus((source?.status as MediaStatus) ?? "Watching");
+      setCurrentEp(String(source?.current_ep ?? 0));
+      setTotalEps(source?.total_eps ? String(source.total_eps) : "");
+      setCurrentSeason(String(source?.current_season ?? 1));
+      setTotalSeasons(source?.total_seasons ? String(source.total_seasons) : "");
+      setSourceName(source?.source_name ?? "");
+      setSourceLink(source?.source_link ?? "");
+      setNotes(source?.notes ?? "");
+      setLinkedIds(source?.linked_spinoff_ids ?? []);
+      setLinkedRelations(source?.linked_relations ?? []);
+      setSpinoffs((source?.spinoffs ?? []) as Spinoff[]);
       setLinkSearch("");
       setGeminiKey(localStorage.getItem("gemini_api_key") || import.meta.env.VITE_GEMINI_API_KEY || "");
       setTmdbSeasons([]);
-      setSuggestedConnections([]);
-      setLoadingConnections(false);
     }
-  }, [open, item]);
+  }, [open, item, initialValues]);
 
   // Dynamic update of episode count when currentSeason changes if we have TMDB seasons data
   useEffect(() => {
@@ -269,74 +231,80 @@ export const MediaDialog = ({ open, onOpenChange, item, allItems = [], onSave }:
     }
   }, [currentSeason, tmdbSeasons]);
 
-  const linkCandidates = useMemo(
-    () => allItems.filter((i) => i.id !== item?.id),
-    [allItems, item?.id]
-  );
-  const filteredCandidates = useMemo(() => {
-    const q = linkSearch.trim().toLowerCase();
-    if (!q) return linkCandidates;
-    return linkCandidates.filter((i) => i.title.toLowerCase().includes(q));
-  }, [linkCandidates, linkSearch]);
-
-  const toggleLinked = (id: string) => {
-    if (linkedIds.includes(id)) {
-      setLinkedIds((prev) => prev.filter((x) => x !== id));
-      setLinkedRelations((prev) => prev.filter((x) => x.id !== id));
+  const toggleLinked = (targetId: string) => {
+    if (linkedIds.includes(targetId)) {
+      setLinkedIds((prev) => prev.filter((id) => id !== targetId));
+      setLinkedRelations((prev) => prev.filter((r) => r.id !== targetId));
     } else {
-      setLinkedIds((prev) => [...prev, id]);
-      setLinkedRelations((prev) => [...prev, { id, relation: "Related" }]);
+      setLinkedIds((prev) => [...prev, targetId]);
+      setLinkedRelations((prev) => [...prev, { id: targetId, relation: "Related" }]);
     }
   };
 
-  const updateRelation = (id: string, relation: "Prequel" | "Sequel" | "Spin-off" | "Related") => {
-    setLinkedRelations((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, relation } : r))
-    );
+  const updateRelation = (targetId: string, relation: "Prequel" | "Sequel" | "Spin-off" | "Related") => {
+    setLinkedRelations((prev) => {
+      const exists = prev.some((r) => r.id === targetId);
+      if (exists) {
+        return prev.map((r) => (r.id === targetId ? { ...r, relation } : r));
+      }
+      return [...prev, { id: targetId, relation }];
+    });
   };
 
-  const addSpinoff = () => setSpinoffs((p) => [...p, { title: "", type: "Movie", relation: "Related", link: "", watched: false }]);
-  const updateSpinoff = (idx: number, patch: Partial<Spinoff>) =>
-    setSpinoffs((p) => p.map((s, i) => i === idx ? { ...s, ...patch } : s));
-  const removeSpinoff = (idx: number) => setSpinoffs((p) => p.filter((_, i) => i !== idx));
+  const addSpinoff = () => {
+    setSpinoffs((prev) => [...prev, { title: "", type: "Series", relation: "Related", link: "", watched: false }]);
+  };
+
+  const updateSpinoff = (index: number, patch: Partial<Spinoff>) => {
+    setSpinoffs((prev) => prev.map((s, i) => (i === index ? { ...s, ...patch } : s)));
+  };
+
+  const removeSpinoff = (index: number) => {
+    setSpinoffs((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const linkCandidates = useMemo(() => {
+    return allItems.filter((i) => !item || i.id !== item.id);
+  }, [allItems, item]);
+
+  const filteredCandidates = useMemo(() => {
+    if (!linkSearch.trim()) return linkCandidates;
+    const q = linkSearch.toLowerCase();
+    return linkCandidates.filter((c) => c.title.toLowerCase().includes(q));
+  }, [linkCandidates, linkSearch]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const isMovie = type === "Movie";
+
     const parsed = schema.safeParse({
       title,
       type,
       status,
-      current_ep: isMovie ? (status === "Completed" ? 1 : 0) : (Number(currentEp) || 0),
-      total_eps: isMovie ? 1 : (totalEps ? Number(totalEps) : null),
-      current_season: isMovie ? 1 : (Number(currentSeason) || 1),
-      total_seasons: isMovie ? 1 : (totalSeasons ? Number(totalSeasons) : null),
+      current_ep: Number(currentEp) || 0,
+      total_eps: totalEps === "" ? null : Number(totalEps),
+      current_season: Number(currentSeason) || 1,
+      total_seasons: totalSeasons === "" ? null : Number(totalSeasons),
       source_name: sourceName || null,
       source_link: sourceLink || null,
       notes: notes || null,
     });
+
     if (!parsed.success) {
-      toast.error(parsed.error.errors[0].message);
+      toast.error(parsed.error.errors[0]?.message ?? "Invalid input");
       return;
     }
+
     setSaving(true);
     try {
-      const cleanSpinoffs = spinoffs
-        .filter((s) => s.title.trim())
-        .map((s) => ({
-          title: s.title.trim(),
-          type: s.type,
-          relation: s.relation || "Related",
-          link: s.link?.trim() || null,
-          watched: !!s.watched,
-        }));
       await onSave({
-        ...(parsed.data as Partial<MediaItem>),
+        ...parsed.data,
         linked_spinoff_ids: linkedIds,
         linked_relations: linkedRelations,
-        spinoffs: cleanSpinoffs,
+        spinoffs: spinoffs.filter((s) => s.title.trim().length > 0),
       });
       onOpenChange(false);
+    } catch (err: any) {
+      toast.error(err.message ?? "Failed to save item");
     } finally {
       setSaving(false);
     }
@@ -344,245 +312,274 @@ export const MediaDialog = ({ open, onOpenChange, item, allItems = [], onSave }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{item ? "Edit" : "Add"} Title</DialogTitle>
+          <DialogTitle>{item ? "Edit Title" : "Add New Title"}</DialogTitle>
         </DialogHeader>
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div id="title-container" className="space-y-2 relative">
-            <Label htmlFor="title">Title *</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onFocus={() => {
-                if (title.trim().length >= 2) setShowSuggestions(true);
-              }}
-              placeholder="e.g. Frieren: Beyond Journey's End"
-              required
-              autoComplete="off"
-            />
-            {showSuggestions && (suggestions.length > 0 || suggestionsLoading || !geminiKey) && (
-              <div
-                className="absolute z-50 w-full mt-1 rounded-xl border border-border/50 bg-background/95 backdrop-blur-md shadow-lg max-h-72 overflow-y-auto overflow-x-hidden flex flex-col glass-panel animate-in fade-in slide-in-from-top-1 duration-200"
-                onMouseDown={(e) => e.preventDefault()}
+          <div className="space-y-2 relative">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="title">Title *</Label>
+              <button
+                type="button"
+                onClick={() => setShowKeyInput(!showKeyInput)}
+                className="text-[11px] text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors"
               >
-                <div className="p-1.5 space-y-1 flex-1">
-                  {suggestionsLoading && suggestions.length === 0 ? (
-                    <div className="flex items-center justify-center py-4 gap-2 text-xs text-muted-foreground">
-                      <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
-                      <span>Fetching AI suggestions...</span>
-                    </div>
-                  ) : suggestions.length === 0 ? (
-                    <div className="text-center py-3 text-xs text-muted-foreground">
-                      No matching suggestions
-                    </div>
-                  ) : (
-                    suggestions.map((s, idx) => {
-                      const isSelected = activeSuggestionIdx === idx;
-                      return (
-                        <div
-                          key={idx}
-                          onClick={() => handleSelectSuggestion(s)}
-                          onMouseEnter={() => setActiveSuggestionIdx(idx)}
-                          className={cn(
-                            "flex flex-col gap-1 px-3 py-2 rounded-lg cursor-pointer transition-all border border-transparent",
-                            isSelected
-                              ? "bg-primary/10 border-primary/20"
-                              : "hover:bg-muted/40"
-                          )}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-semibold text-foreground truncate">{s.title}</span>
-                            <div className="flex items-center gap-1 shrink-0">
-                              <Badge variant="outline" className="text-[9px] px-1 h-4 bg-muted/30">
-                                {s.type}
-                              </Badge>
-                              {s.isAI && (
-                                <Badge
-                                  variant="secondary"
-                                  className="text-[9px] px-1 h-4 bg-fuchsia-500/20 text-fuchsia-300 border-none font-bold flex items-center gap-0.5 animate-pulse"
-                                >
-                                  <Sparkles className="h-2 w-2 fill-current" /> AI
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                          {s.notes && (
-                            <span className="text-[10px] text-muted-foreground line-clamp-1 leading-normal">
-                              {s.notes}
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })
-                  )}
+                <Sparkles className="h-3 w-3 text-primary" />
+                {geminiKey ? "AI Auto-Suggest active" : "Using TMDB (Add Gemini Key)"}
+              </button>
+            </div>
+
+            {showKeyInput && (
+              <div className="p-3 bg-muted/40 rounded-lg border border-border space-y-2 mb-2 text-xs">
+                <p className="text-muted-foreground">
+                  Paste your Google Gemini API key to unlock context-aware completions. (Saved locally in your browser)
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    type="password"
+                    placeholder="AIzaSy..."
+                    value={keyInputValue}
+                    onChange={(e) => setKeyInputValue(e.target.value)}
+                    className="h-8 text-xs font-mono"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="h-8 text-xs"
+                    onClick={() => {
+                      if (keyInputValue.trim()) {
+                        localStorage.setItem("gemini_api_key", keyInputValue.trim());
+                        setGeminiKey(keyInputValue.trim());
+                        setShowKeyInput(false);
+                        toast.success("Gemini API key saved locally!");
+                      } else {
+                        localStorage.removeItem("gemini_api_key");
+                        setGeminiKey("");
+                        setShowKeyInput(false);
+                        toast.info("Using TMDB fallback autocomplete");
+                      }
+                    }}
+                  >
+                    Save Key
+                  </Button>
                 </div>
-                <div className="border-t border-border/40 p-2 bg-muted/10 text-[10px]">
-                  {showKeyInput ? (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="password"
-                        placeholder="Paste Gemini API Key..."
-                        value={keyInputValue}
-                        onChange={(e) => setKeyInputValue(e.target.value)}
-                        className="h-6 text-[10px] py-1 px-2 flex-1"
-                        autoFocus
-                      />
-                      <Button
-                        type="button"
-                        size="sm"
-                        className="h-6 px-2 text-[10px] bg-primary hover:bg-primary/90 text-white"
-                        onClick={() => {
-                          const val = keyInputValue.trim();
-                          if (val) {
-                            localStorage.setItem("gemini_api_key", val);
-                            setGeminiKey(val);
-                            setShowKeyInput(false);
-                            setKeyInputValue("");
-                            toast.success("Gemini API key saved! AI suggestions active. ✨");
-                          }
-                        }}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 px-1.5 text-[10px] text-muted-foreground"
-                        onClick={() => setShowKeyInput(false)}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between text-muted-foreground px-1">
-                      <span className="flex items-center gap-1 font-medium">
-                        {geminiKey ? (
-                          <>
-                            <Sparkles className="h-3 w-3 text-fuchsia-400 fill-fuchsia-400/20 animate-pulse" />
-                            <span>Gemini AI active</span>
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="h-3 w-3 text-muted-foreground" />
-                            <span>TMDB fallback active (AI inactive)</span>
-                          </>
-                        )}
-                      </span>
-                      <button
-                        type="button"
-                        className="text-primary hover:underline font-semibold"
-                        onClick={() => {
-                          setKeyInputValue(geminiKey);
-                          setShowKeyInput(true);
-                        }}
-                      >
-                        {geminiKey ? "Change Key" : "Configure AI"}
-                      </button>
-                    </div>
-                  )}
+              </div>
+            )}
+
+            <div className="relative">
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onFocus={() => {
+                  if (suggestions.length > 0) setShowSuggestions(true);
+                }}
+                placeholder="e.g. Spider-Man: Brand New Day"
+                required
+                autoComplete="off"
+              />
+              {suggestionsLoading && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs text-muted-foreground pointer-events-none">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                </div>
+              )}
+            </div>
+
+            {/* AI Autocomplete Dropdown List */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-popover/95 backdrop-blur-md border border-border/80 rounded-xl shadow-2xl overflow-hidden animate-in fade-in-50 zoom-in-95">
+                <div className="p-1.5 max-h-60 overflow-y-auto">
+                  <div className="px-2 py-1 text-[10px] uppercase font-bold text-muted-foreground flex items-center justify-between border-b border-border/40 mb-1">
+                    <span className="flex items-center gap-1">
+                      <Sparkles className="h-3 w-3 text-primary" /> Suggestions
+                    </span>
+                    <span>{geminiKey ? "Gemini AI" : "TMDB Data"}</span>
+                  </div>
+                  {suggestions.map((s, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSelectSuggestion(s)}
+                      onMouseEnter={() => setActiveSuggestionIdx(idx)}
+                      className={cn(
+                        "w-full text-left px-2.5 py-2 rounded-lg text-xs flex flex-col gap-0.5 transition-colors",
+                        activeSuggestionIdx === idx
+                          ? "bg-primary/20 text-foreground font-medium"
+                          : "hover:bg-muted/60 text-muted-foreground"
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-semibold text-foreground truncate">{s.title}</span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {s.type && (
+                            <Badge variant="outline" className="text-[9px] h-4 px-1 font-normal bg-background/50">
+                              {s.type}
+                            </Badge>
+                          )}
+                          {s.total_eps ? (
+                            <span className="text-[10px] opacity-75 font-mono">
+                              {s.total_eps} eps
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                      {s.notes && (
+                        <span className="text-[10px] text-muted-foreground truncate">{s.notes}</span>
+                      )}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Type</Label>
+              <Label htmlFor="type">Type</Label>
               <Select value={type} onValueChange={(v) => setType(v as MediaType)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="type">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
-                  {MEDIA_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  {MEDIA_TYPES.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {t}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
+
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label htmlFor="status">Status</Label>
               <Select value={status} onValueChange={(v) => setStatus(v as MediaStatus)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="status">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
-                  {MEDIA_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  {MEDIA_STATUSES.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          {type !== "Movie" && (
-            <div className="grid grid-cols-2 gap-3">
+          {type !== "Movie" ? (
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="cs">Current season</Label>
-                <Input id="cs" type="number" min="1" value={currentSeason} onChange={(e) => setCurrentSeason(e.target.value)} />
+                <Label htmlFor="currentSeason">Current Season</Label>
+                <Input
+                  id="currentSeason"
+                  type="number"
+                  min="1"
+                  value={currentSeason}
+                  onChange={(e) => setCurrentSeason(e.target.value)}
+                />
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="ts">Total seasons</Label>
-                <Input id="ts" type="number" min="1" value={totalSeasons} onChange={(e) => setTotalSeasons(e.target.value)} placeholder="Optional" />
+                <Label htmlFor="totalSeasons">Total Seasons</Label>
+                <Input
+                  id="totalSeasons"
+                  type="number"
+                  min="1"
+                  placeholder="Ongoing / Unknown"
+                  value={totalSeasons}
+                  onChange={(e) => setTotalSeasons(e.target.value)}
+                />
               </div>
             </div>
-          )}
+          ) : null}
 
-          {type !== "Movie" && (
-            <div className="grid grid-cols-2 gap-3">
+          {type !== "Movie" ? (
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="cur">Current episode</Label>
-                <Input id="cur" type="number" min="0" value={currentEp} onChange={(e) => setCurrentEp(e.target.value)} />
+                <Label htmlFor="currentEp">Current Episode</Label>
+                <Input
+                  id="currentEp"
+                  type="number"
+                  min="0"
+                  value={currentEp}
+                  onChange={(e) => setCurrentEp(e.target.value)}
+                />
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="tot">Total episodes (this season)</Label>
-                <Input id="tot" type="number" min="0" value={totalEps} onChange={(e) => setTotalEps(e.target.value)} placeholder="Optional" />
+                <Label htmlFor="totalEps">Total Episodes</Label>
+                <Input
+                  id="totalEps"
+                  type="number"
+                  min="0"
+                  placeholder="Ongoing / Unknown"
+                  value={totalEps}
+                  onChange={(e) => setTotalEps(e.target.value)}
+                />
               </div>
             </div>
-          )}
+          ) : null}
 
-          <div className="space-y-2">
-            <Label htmlFor="src">Watch source</Label>
-            <Input id="src" value={sourceName} onChange={(e) => setSourceName(e.target.value)} placeholder="Crunchyroll, Netflix, VLC..." />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="sourceName">Source Name</Label>
+              <Input
+                id="sourceName"
+                placeholder="e.g. Netflix, Crunchyroll"
+                value={sourceName}
+                onChange={(e) => setSourceName(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="sourceLink">Source Link</Label>
+              <Input
+                id="sourceLink"
+                type="url"
+                placeholder="https://..."
+                value={sourceLink}
+                onChange={(e) => setSourceLink(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="link">Direct link</Label>
-            <Input id="link" type="url" value={sourceLink} onChange={(e) => setSourceLink(e.target.value)} placeholder="https://..." />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">Notes / Thoughts</Label>
             <Textarea
               id="notes"
+              rows={2}
+              placeholder="Add your review, thoughts, or custom notes..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Plot points, characters to remember, theories..."
-              rows={4}
             />
           </div>
 
-          <div className="space-y-3 rounded-lg border border-border/60 bg-muted/20 p-3">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <Label className="text-sm font-semibold">Connections & Timeline</Label>
+          {/* Connections & Timeline */}
+          <div className="space-y-4 rounded-lg border border-border/60 bg-muted/20 p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                <Link2 className="h-4 w-4 text-primary" />
+                <span>Connections & Timeline</span>
+              </div>
             </div>
 
             {linkCandidates.length > 0 && (
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Link2 className="h-3 w-3" /> Connect separate library items
-                  </span>
-                  {linkedIds.length > 0 && (
-                    <Badge variant="secondary" className="text-[10px] h-5">{linkedIds.length} linked</Badge>
-                  )}
-                </div>
+                <span className="text-xs text-muted-foreground">Connect separate library items</span>
                 <Input
-                  placeholder="Search your library..."
                   value={linkSearch}
                   onChange={(e) => setLinkSearch(e.target.value)}
-                  className="h-8 text-sm"
+                  placeholder="Search your library..."
+                  className="h-8 text-xs"
                 />
-                <ScrollArea className="h-32 rounded-md border border-border/50 bg-background/50">
-                  <div className="p-1 space-y-0.5">
+                <ScrollArea className="h-28 rounded-md border border-border/50 bg-background/50 p-1">
+                  <div className="space-y-1">
                     {filteredCandidates.length === 0 ? (
-                      <p className="text-xs text-muted-foreground text-center py-4">No matches</p>
+                      <p className="text-xs text-muted-foreground p-2">No matching library titles found.</p>
                     ) : filteredCandidates.map((c) => {
                       const checked = linkedIds.includes(c.id);
                       const currentRelation = linkedRelations.find((r) => r.id === c.id)?.relation ?? "Related";
@@ -626,57 +623,6 @@ export const MediaDialog = ({ open, onOpenChange, item, allItems = [], onSave }:
                     })}
                   </div>
                 </ScrollArea>
-              </div>
-            )}
-
-            {/* Suggested Franchise Connections (AI or TMDB powered) */}
-            {(loadingConnections || suggestedConnections.length > 0) && (
-              <div className="space-y-2 border-t border-border/40 pt-3">
-                <span className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />
-                  Suggested Franchise Connections
-                </span>
-                {loadingConnections ? (
-                  <div className="flex items-center gap-2 py-2 text-xs text-muted-foreground">
-                    <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                    <span>Discovering connected titles...</span>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-1.5 max-h-32 overflow-y-auto pr-1">
-                    {suggestedConnections.map((conn, idx) => {
-                      let relationColor = "bg-zinc-800 text-zinc-300 border border-zinc-700/50";
-                      if (conn.relation === "Prequel") relationColor = "bg-blue-500/10 text-blue-300 border border-blue-500/20";
-                      else if (conn.relation === "Sequel") relationColor = "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20";
-                      else if (conn.relation === "Spin-off") relationColor = "bg-fuchsia-500/10 text-fuchsia-300 border border-fuchsia-500/20";
-
-                      return (
-                        <div 
-                          key={idx} 
-                          className="flex items-center justify-between gap-3 px-2.5 py-1.5 rounded-lg border border-border/50 bg-background/40 text-[11px] w-full hover:border-primary/20 transition-all"
-                        >
-                          <div className="flex items-center gap-1.5 truncate flex-1">
-                            <span className="font-medium truncate text-foreground/90">{conn.title}</span>
-                            <Badge variant="outline" className="text-[8px] h-3.5 px-1 bg-muted/40 shrink-0 font-normal">
-                              {conn.type}
-                            </Badge>
-                            {conn.relation && (
-                              <Badge className={cn("text-[8px] h-3.5 px-1 font-bold shrink-0 shadow-none border-none", relationColor)}>
-                                {conn.relation}
-                              </Badge>
-                            )}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => addSuggestedConnection(conn)}
-                            className="flex items-center gap-0.5 px-2 py-0.5 rounded-md bg-primary/10 text-primary hover:bg-primary hover:text-white font-bold transition-all shrink-0 active:scale-95 text-[10px]"
-                          >
-                            <Plus className="h-2.5 w-2.5" /> Connect
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
               </div>
             )}
 
