@@ -17,10 +17,9 @@ dist-ssr
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Test artifacts
+playwright-report/
+test-results/
+blob-report/
+qa/LINKEDIN_SHOWCASE.md
+

@@ -17,6 +17,8 @@
   [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.x-38bdf8?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
   [![Firebase](https://img.shields.io/badge/Firebase-11.x-ffca28?style=flat-square&logo=firebase)](https://firebase.google.com/)
   [![Gemini](https://img.shields.io/badge/Gemini_AI-2.5_Flash-f59e0b?style=flat-square&logo=google-gemini)](https://deepmind.google/technologies/gemini/)
+  [![Playwright Tests](https://img.shields.io/badge/Playwright-E2E%20Passed-2ea44f?style=flat-square&logo=playwright)](https://playwright.dev/)
+  [![Vitest](https://img.shields.io/badge/Vitest-White%20Box%20Passed-646cff?style=flat-square&logo=vitest)](https://vitest.dev/)
 </div>
 
 ---
@@ -94,16 +96,38 @@ Open [http://localhost:5173](http://localhost:5173) in your browser!
 
 ---
 
-## 🧪 Testing & Quality Assurance
+## 🧪 Quality Assurance & Test Engineering (STLC)
 
-This repository follows a strict testing strategy covering Unit, Integration, API, Database, and UI/UX testing. 
+AniTrace follows an industry-standard Software Testing Life Cycle (STLC) incorporating **Black-Box Testing**, **White-Box Testing**, and **Automated E2E Testing**.
 
-* **Complete Test Cases & Scenarios:** Refer to the detailed [QA Test Plan](file:///c:/Users/Rakesh/Vs%20code/AniTrace/AniTrace/QA_TEST_PLAN.md) for step-by-step validation procedures.
-* **Running Tests:** We use Vitest for lightning-fast test execution. Run them locally via:
-  ```bash
-  npm run test
-  ```
+### 📁 QA Directory Structure (`/qa`)
+- 📋 **[Master Test Plan](qa/test-plan/QA_MASTER_TEST_PLAN.md):** High-level test strategy, environments, pass/fail criteria, and risk matrix.
+- 📑 **Test Case Suites:**
+  - [Module 01: Authentication](qa/test-cases/TC_01_Authentication.md) *(Boundary Value Analysis, Equivalence Partitioning, Security)*
+  - [Module 02: Search & Autocomplete](qa/test-cases/TC_02_Search_Discovery.md) *(Edge cases, Debounce timing, API Fallback)*
+- 🐛 **[Defect Log & Bug Reports](qa/bug-reports/DEFECT_LOG.md):** Real bug reports with standard Severity (S1–S4) & Priority (P1–P3) metrics.
+- 🎭 **[E2E Automation (Playwright)](qa/e2e-automation/):** Page Object Model (POM) architecture testing Desktop Chrome and Mobile viewports.
 
+---
+
+### ⚡ Running Test Suites Locally
+
+#### 1. White-Box Unit & Integration Tests (Vitest)
+```bash
+npm test
+```
+
+#### 2. Black-Box End-to-End UI Automation (Playwright)
+```bash
+# Run Playwright tests headlessly
+npx playwright test
+
+# Run Playwright tests in interactive UI mode
+npx playwright test --ui
+
+# View generated HTML test execution report
+npx playwright show-report
+```
 
 ---
 
@@ -120,7 +144,7 @@ Contributions make the open-source community an amazing place. Any contributions
 ---
 
 ## 📝 License
-Distributed under the MIT License. See [`LICENSE`](file:///c:/Users/Rakesh/Vs%20code/AniTrace/AniTrace/LICENSE) for more information.
+Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information.
 
 ---
 
