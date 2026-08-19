@@ -33,10 +33,10 @@ qa/
 ## 🎯 3. Scope of Testing
 
 ### In-Scope:
-1. **Functional Testing:** Authentication (Login/Register/Guest), Search & Filtering, Watchlist CRUD (Create, Read, Update, Delete), Profile updates.
-2. **Non-Functional Testing:** UI/UX responsiveness across devices (Desktop, Tablet, Mobile), Performance (page load, search latency), Error Handling.
-3. **Integration Testing:** Firebase Auth & Firestore real-time sync, TMDB API, Gemini API fallback.
-4. **Boundary & Negative Testing:** Empty searches, extreme episode inputs, invalid email/passwords, offline network mode.
+1. **Functional Testing:** Authentication (Login/Register/Guest), Search & Filtering, Watchlist CRUD, Media Discovery.
+2. **Non-Functional Testing:** UI/UX responsiveness across devices (Desktop Chrome + Mobile Viewports), Debounce latency.
+3. **Integration & API Contract Testing:** TMDB API schema validation, Gemini API fallback, Firebase Auth & Firestore sync.
+4. **Automated CI/CD Pipeline:** Automated GitHub Actions running on every Push and Pull Request (`.github/workflows/test.yml`).
 
 ### Out-of-Scope:
 - Direct load testing over 10,000 concurrent users against free-tier Firebase quotas.
