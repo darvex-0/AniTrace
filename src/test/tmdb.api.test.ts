@@ -1,8 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { searchTMDB, getTrending, getDisplayTitle, getYear } from '../lib/tmdb';
 
+const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
+
 describe('API Contract & Integration Testing: TMDB API', () => {
   it('API-TMDB-001: Should search and return structured media objects with valid schema', async () => {
+    if (!API_KEY) {
+      console.warn('Skipping live TMDB API test in CI because VITE_TMDB_API_KEY is not set');
+      return;
+    }
     const data = await searchTMDB('Attack on Titan');
 
     expect(data).toHaveProperty('results');
@@ -17,6 +23,10 @@ describe('API Contract & Integration Testing: TMDB API', () => {
   });
 
   it('API-TMDB-002: Should fetch trending items with valid poster/backdrop attributes', async () => {
+    if (!API_KEY) {
+      console.warn('Skipping live TMDB API test in CI because VITE_TMDB_API_KEY is not set');
+      return;
+    }
     const data = await getTrending('all', 'week');
 
     expect(data).toHaveProperty('results');

@@ -25,6 +25,8 @@ jobs:
 
       - name: Run Vitest Suite
         run: npm run test
+        env:
+          VITE_TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
 
   e2e-automation-tests:
     name: End-to-End UI Automation (Playwright)
