@@ -30,8 +30,10 @@ jobs:
 
   e2e-automation-tests:
     name: End-to-End UI Automation (Playwright)
-    timeout-minutes: 15
+    timeout-minutes: 10
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.50.0-noble
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -44,17 +46,6 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci
-
-      - name: Cache Playwright Browsers
-        uses: actions/cache@v4
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
-
-      - name: Install Playwright Browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
 
       - name: Run Playwright Tests
         run: npx playwright test
