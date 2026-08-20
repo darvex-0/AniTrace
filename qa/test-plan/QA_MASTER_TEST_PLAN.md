@@ -19,33 +19,39 @@ qa/
 ├── test-cases/
 │   ├── TC_01_Authentication.md     <-- Login, Signup, Password, Session persistence
 │   ├── TC_02_Search_Discovery.md   <-- TMDB/Gemini search, autocomplete, edge inputs
-│   ├── TC_03_Watchlist_Tracking.md <-- Add, edit episodes, delete, status filters
-│   └── TC_04_UI_Responsiveness.md  <-- Mobile/Desktop viewports, dark mode, layout
+│   ├── TC_03_Watchlist_Tracking.md <-- Add media, episode progress (+/-), validation
+│   └── TC_04_Franchise_Profile.md  <-- Franchise explorer, profile stats, API keys
 ├── bug-reports/
-│   ├── BUG_TEMPLATE.md             <-- Standardized defect logging template
-│   └── DEFECT_LOG.md               <-- Documented defects logged during testing
-├── api-tests/                      <-- API endpoints testing, Postman/Newman collections
-└── e2e-automation/                 <-- Playwright / Vitest automated test suites
+│   └── DEFECT_LOG.md               <-- Documented defects with severity & priority
+├── e2e-automation/                 <-- Playwright Page Object Model E2E test suites
+└── api-tests/                      <-- API schema & contract tests in Vitest
 ```
 
 ---
 
-## 🎯 3. Scope of Testing
+## 🎯 3. Scope of Testing & Functional Coverage
 
-### In-Scope:
-1. **Functional Testing:** Authentication (Login/Register/Guest), Search & Filtering, Watchlist CRUD, Media Discovery.
-2. **Non-Functional Testing:** UI/UX responsiveness across devices (Desktop Chrome + Mobile Viewports), Debounce latency.
-3. **Integration & API Contract Testing:** TMDB API schema validation, Gemini API fallback, Firebase Auth & Firestore sync.
-4. **Automated CI/CD Pipeline:** Automated GitHub Actions running on every Push and Pull Request (`.github/workflows/test.yml`).
-
-### Out-of-Scope:
-- Direct load testing over 10,000 concurrent users against free-tier Firebase quotas.
+### Complete Module Coverage:
+1. **Module 1 - Authentication & Sessions:** Login, Register, Guest mode, Session persistence, Validation errors (`TC_01_Authentication.md`).
+2. **Module 2 - Search & Discovery:** Real-time search, Debounce latency, Empty/Edge queries, TMDB fallback (`TC_02_Search_Discovery.md`).
+3. **Module 3 - Watchlist & Progress Tracking:** Media CRUD, Increment/Decrement (+/-) buttons, Boundary checks, Filter tabs (`TC_03_Watchlist_Tracking.md`).
+4. **Module 4 - Franchise & Profile:** Connected works explorer, 1-click addition, LocalStorage API key persistence, Stats calculations (`TC_04_Franchise_Profile.md`).
+5. **Integration & API Contract Testing:** TMDB API schema validation, Gemini API fallback, Firebase Auth & Firestore sync (`src/test/tmdb.api.test.ts`).
+6. **Automated CI/CD Pipeline:** GitHub Actions running on every Push and Pull Request (`.github/workflows/test.yml`).
 
 ---
 
-## 📊 4. Test Deliverables
-1. Comprehensive Test Case Matrix (Positive, Negative, Boundary).
-2. Bug Reports with reproduction steps, severity, and root-cause analysis.
-3. Automated Component/Unit Test Suite (Vitest).
-4. Automated End-to-End Test Suite (Playwright).
-5. Final QA Execution Summary & Sign-off Report for LinkedIn portfolio.
+## ⚡ 4. Test Execution Guidelines
+
+### 1. Manual Testing:
+Follow step-by-step test instructions in each module test file under `/qa/test-cases/` and log any deviations in `/qa/bug-reports/DEFECT_LOG.md`.
+
+### 2. White-Box Unit & API Contract Automation:
+```bash
+npm test
+```
+
+### 3. Black-Box End-to-End Browser Automation:
+```bash
+npx playwright test
+```
